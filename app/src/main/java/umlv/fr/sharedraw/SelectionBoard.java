@@ -1,5 +1,6 @@
 package umlv.fr.sharedraw;
 
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -62,7 +63,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         httpRequest.execute("getListOfDashboard", "127.0.0.1:12345"); */
     }
 
-    private void addNewBoard(ArrayList listItem,String titre,String description){
+    private void addNewBoard(ArrayList<HashMap<String, String>> listItem,String titre,String description){
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("titre", titre);
         map.put("description", description);
@@ -88,34 +89,31 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add:
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("Please write the title and this description");
+                Dialog dialog = new Dialog(this);
+                dialog.setContentView(R.layout.dialog_layout);
+                dialog.setTitle("Please write the title and this description");
 
                 // Set up the input
-                final EditText input = new EditText(this);
-                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-                input.setInputType(InputType.TYPE_CLASS_TEXT);
-                builder.setView(input);
+                /*final EditText title = new EditText(this);
+                final EditText description = new EditText(this);*/
 
                 // Set up the buttons
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                /*dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        Toast.makeText(getApplicationContext(),input.getText().toString(),Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(),title.getText().toString(),Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(),description.getText().toString(),Toast.LENGTH_SHORT).show();
                         //m_Text = input.getText().toString();
                     }
                 });
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
-                });
+                });*/
 
-                builder.show();
-
-                Toast.makeText(getApplicationContext(),"Add new board... Please wait.",Toast.LENGTH_SHORT).show();
-                // TODO
+                dialog.show();
 
                 return true;
             default:
