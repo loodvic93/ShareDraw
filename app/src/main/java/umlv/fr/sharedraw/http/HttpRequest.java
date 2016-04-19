@@ -1,18 +1,18 @@
 package umlv.fr.sharedraw.http;
 
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
-import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
+import umlv.fr.sharedraw.SelectionBoard;
 
 /**
  * @author Ludovic
@@ -22,37 +22,37 @@ import java.util.Objects;
  */
 public class HttpRequest extends AsyncTask<String, Integer, String> {
     private final Map<String, Method> methods;
+    private AsyncTaskResponse delegate;
 
     private HttpRequest() {
         methods = new HashMap<>();
     }
 
-    public HttpRequest createHttpRequest() {
+    public static HttpRequest createHttpRequest() {
         HttpRequest httpRequest = new HttpRequest();
-        for (Method m : this.getClass().getMethods()) {
+        for (Method m : HttpRequest.class.getDeclaredMethods()) {
             if (m.isAnnotationPresent(HttpRequestProperty.class)) {
                 String method = m.getAnnotation(HttpRequestProperty.class).value();
-                this.methods.put(method, m);
+                httpRequest.methods.put(method, m);
             }
         }
-
-
         return httpRequest;
     }
 
     @HttpRequestProperty(value = "getListOfDashboard")
     private String getListOfDashboard(String... params) {
-        URL url = getURL(params[0]);
+        URL url = getURL(params[1]);
+        /*URL url = getURL(params[0]);
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 
         } catch (IOException e) {
             e.printStackTrace();
-        }
+        }*/
 
 
-        return "";
+        return "Hello";
     }
 
     private URL getURL(String url) {
@@ -75,10 +75,12 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
      * @return String at JSON Format if all is ok, null if not
      */
     @Override
-    protected String doInBackground(@NonNull String... params) {
+    protected String doInBackground(String... params) {
         if (params.length < 1) return null;
         try {
-            return (String) methods.get(params[0]).invoke(params);
+            Method m = methods.get(params[0]);
+            if (m == null) return null;
+            return (String)m.invoke(HttpRequest.this, new Object[] { params });
         } catch (IllegalAccessException e) {
             Log.e("Cannot access to : ", params[0]);
             return null;
@@ -86,5 +88,18 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             Log.e("Invalid method : ", params[0]);
             return null;
         }
+    }
+
+    /**
+     * Delegate the result of AsyncTask to another method
+     * @param result Result of HTTP Request in JSON.
+     */
+    @Override
+    protected void onPostExecute(String result) {
+        delegate.onAsyncTaskFinished(result);
+    }
+
+    public void setDelegate(AsyncTaskResponse delegate) {
+        this.delegate = delegate;
     }
 }

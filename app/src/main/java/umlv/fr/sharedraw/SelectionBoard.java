@@ -12,7 +12,10 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class SelectionBoard extends AppCompatActivity {
+import umlv.fr.sharedraw.http.AsyncTaskResponse;
+import umlv.fr.sharedraw.http.HttpRequest;
+
+public class SelectionBoard extends AppCompatActivity implements AsyncTaskResponse{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +63,19 @@ public class SelectionBoard extends AppCompatActivity {
 
         //On attribue à notre listView l'adapter que l'on vient de créer
         listViewBoard.setAdapter(mSchedule);
+
+
+        /* Test AsyncTask
+        HttpRequest httpRequest = HttpRequest.createHttpRequest();
+        httpRequest.setDelegate(this);
+        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345"); */
     }
+
+    @Override
+    public void onAsyncTaskFinished(String result) {
+        // TODO: Call a method which draw the list view
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
