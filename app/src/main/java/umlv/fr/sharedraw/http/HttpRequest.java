@@ -3,16 +3,12 @@ package umlv.fr.sharedraw.http;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import umlv.fr.sharedraw.SelectionBoard;
 
 /**
  * @author Ludovic
