@@ -93,16 +93,18 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
      */
     @Override
     protected void onPostExecute(String result) {
-        if (delegate != null) delegate.onAsyncTaskFinished(result);
+        delegate.onAsyncTaskFinished(result);
     }
 
     @HttpRequestProperty(value = "getListOfDashboard")
     private String getListOfDashboard(String... params) {
-        URL url = getURL(params[1]);
+        URL url = getURL("http://" + params[1]);
+        System.out.println("URL = " + url.toString());
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int code = connection.getResponseCode();
+            System.out.println("CODE = " + code);
             if (code == 200) {
                 return getStringFromInputStream(connection.getInputStream());
             } else {
@@ -111,13 +113,14 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
         } catch (IOException e) {
             Log.d("Cannot connect to ", params[1]);
+            e.printStackTrace();
             return null;
         }
     }
 
     @HttpRequestProperty(value = "postMessage")
     private String postNewMessage(String... params) {
-        URL url = getURL(params[1] + "/" + params[2]);
+        URL url = getURL("http://" + params[1] + "/" + params[2]);
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -141,7 +144,7 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     @HttpRequestProperty(value = "getMessage")
     private String getMessage(String... params) {
-        URL url = getURL(params[1] + "/" + params[2] + "/" + params[3]);
+        URL url = getURL("http://" + params[1] + "/" + params[2] + "/" + params[3]);
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
