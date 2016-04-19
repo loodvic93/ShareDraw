@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">ShareDraw</string>
+    <string name="select_dashboard">Select a dashboard</string>
     <string name="add_new_board">add new board</string>
 </resources>
