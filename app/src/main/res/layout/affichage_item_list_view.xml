@@ -2,8 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="horizontal"
     android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    >
+    android:layout_height="wrap_content">
 
     <ImageView
         android:id="@+id/img"
@@ -25,7 +24,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:textStyle="bold"
-            />
+            android:textColor="#d7c300" />
 
         <TextView android:id="@+id/description"
             android:layout_width="fill_parent"
