@@ -1,10 +1,10 @@
 package umlv.fr.sharedraw;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,7 +17,6 @@ import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +24,8 @@ import java.util.HashMap;
 import umlv.fr.sharedraw.http.AsyncTaskResponse;
 import umlv.fr.sharedraw.http.HttpRequest;
 
-public class SelectionBoard extends AppCompatActivity implements AsyncTaskResponse{
+public class SelectionBoard extends AppCompatActivity implements AsyncTaskResponse {
+    private final ArrayList<HashMap<String, String>> listItem = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,59 +34,56 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
         HttpRequest httpRequest = HttpRequest.createHttpRequest();
         httpRequest.setDelegate(this);
-        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345");
+        httpRequest.execute("getListOfDashboard", "192.168.1.87:7777");
 
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
 
-        //Création de la ArrayList qui nous permettra de remplir la listView
-        ArrayList<HashMap<String, String>> listItem = new ArrayList<HashMap<String, String>>();
-
-        //On refait la manip plusieurs fois avec des données différentes pour former les items de notre ListView
-        addNewBoard(listItem,"A Titre Board 1","Description");
-
-        addNewBoard(listItem,"C Titre Board 2","Description");
-
-        addNewBoard(listItem,"Titre Board 3","Description");
-
-        //Création d'un SimpleAdapter qui se chargera de mettre les items présents dans notre list (listItem) dans la vue affichageitem
-        SimpleAdapter adapter = new SimpleAdapter (this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
-                new String[] {"img", "titre", "description"}, new int[] {R.id.img, R.id.titre, R.id.description});
-
-        //On attribue à notre listView l'adapter que l'on vient de créer
-        listViewBoard.setAdapter(adapter);
-
-        //Enfin on met un écouteur d'évènement sur notre listView
+        assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            @SuppressWarnings("unchecked")
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
                 //TODO methode pour lancer un board
             }
         });
     }
 
-    private void addNewBoard(ArrayList<HashMap<String, String>> listItem,String titre,String description){
-        HashMap<String, String> map = new HashMap<String, String>();
+    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String titre, String description) {
+        HashMap<String, String> map = new HashMap<>();
         map.put("titre", titre);
         map.put("description", description);
-        String nameOfImage = titre.substring(0,1);
-        nameOfImage =  nameOfImage.toLowerCase();
+        String nameOfImage = titre.substring(0, 1);
+        nameOfImage = nameOfImage.toLowerCase();
         map.put("img", String.valueOf(getResources().getIdentifier(nameOfImage, "drawable", this.getPackageName())));
         listItem.add(map);
     }
 
+    private void updateAndSetAdapter() {
+        ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
+        if (listViewBoard == null) return;
+        SimpleAdapter adapter = new SimpleAdapter(this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
+                new String[]{"img", "titre", "description"}, new int[]{R.id.img, R.id.titre, R.id.author});
+        listViewBoard.setAdapter(adapter);
+    }
+
+    private void resultToBoard(JSONArray json) {
+        try {
+            for (int i = 0; i < json.length(); i++) {
+                String titre = json.getString(i);
+                addNewBoard(listItem, titre, "");
+            }
+            updateAndSetAdapter();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onAsyncTaskFinished(String result) {
-        // TODO: Call a method which draw the list view
-        if(result==null){
-            return;
-        }
+        if (result == null) return;
         try {
-            JSONArray jsonArray = new JSONArray(result);
-
-
-        }catch (JSONException e){
-            Log.d("Problem witch result",e);
+            resultToBoard(new JSONArray(result));
+        } catch (JSONException e) {
+            //
         }
     }
 
@@ -110,18 +107,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                 dialog.setTitle("Please write informations");
 
                 // Set up the buttons
-                dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        EditText title = (EditText) dialogView.findViewById(R.id.title);
-                        EditText description = (EditText) dialogView.findViewById(R.id.description);
-
-                        Toast.makeText(getApplicationContext(),title.getText().toString(),Toast.LENGTH_SHORT).show();
-                        Toast.makeText(getApplicationContext(),description.getText().toString(),Toast.LENGTH_SHORT).show();
-
-                        //TODO methode pour lancer un new board
-                    }
-                });
+                dialog.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
 
                 dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
@@ -135,6 +121,41 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private class DialogListenerClickNewDashboard implements DialogInterface.OnClickListener, AsyncTaskResponse {
+        private View dialogView;
+        private String author;
+        private String title;
+
+        DialogListenerClickNewDashboard(View dialogView) {
+            this.dialogView = dialogView;
+        }
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            EditText title = (EditText) dialogView.findViewById(R.id.title);
+            this.title = title.getText().toString();
+            EditText author = (EditText) dialogView.findViewById(R.id.author);
+            this.author = author.getText().toString();
+
+            Toast.makeText(getApplicationContext(), title.getText().toString(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), author.getText().toString(), Toast.LENGTH_SHORT).show();
+
+            HttpRequest httpRequest = HttpRequest.createHttpRequest();
+            httpRequest.setDelegate(this);
+            httpRequest.execute("postMessage", "192.168.1.87:7777", this.title, "&author=" + this.author + "&message={}");
+        }
+
+        @Override
+        public void onAsyncTaskFinished(String result) {
+            if (result == null) return;
+            Intent intent = new Intent(SelectionBoard.this, DashboardActivity.class);
+            intent.putExtra("author", author);
+            intent.putExtra("title", title);
+            finish();
+            startActivity(intent);
         }
     }
 

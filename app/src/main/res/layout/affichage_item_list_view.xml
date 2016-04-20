@@ -26,7 +26,7 @@
             android:textStyle="bold"
             android:textColor="#d7c300" />
 
-        <TextView android:id="@+id/description"
+        <TextView android:id="@+id/author"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             />
