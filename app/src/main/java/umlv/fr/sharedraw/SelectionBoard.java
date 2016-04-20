@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -98,24 +99,46 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add:
-                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
                 //On instancie notre layout en tant que View
                 LayoutInflater factory = LayoutInflater.from(this);
                 final View dialogView = factory.inflate(R.layout.dialog_layout, null);
-                dialog.setView(dialogView);
-                dialog.setTitle("Please write informations");
-
+                builder.setView(dialogView);
+                builder.setTitle("Please write informations");
                 // Set up the buttons
-                dialog.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
+                builder.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
 
-                dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
                 });
 
+
+                AlertDialog dialog = builder.create();
+                dialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                    @Override
+                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
+                        EditText title = (EditText) dialogView.findViewById(R.id.title);
+                        EditText author = (EditText) dialogView.findViewById(R.id.author);
+                        System.out.println("TITRE = " + title.getText().toString());
+                        if (!title.getText().toString().isEmpty() && !author.getText().toString().isEmpty()) {
+                            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        } else {
+                            ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                        }
+                        return true;
+                    }
+                });
+
+                dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(DialogInterface dialog) {
+                        ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                    }
+                });
                 dialog.show();
 
                 return true;
