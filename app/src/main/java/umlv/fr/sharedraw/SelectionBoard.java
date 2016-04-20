@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -96,7 +99,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add:
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -117,34 +120,65 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                 });
 
 
-                AlertDialog dialog = builder.create();
-                dialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
+                final AlertDialog dialog = builder.create();
+                final EditText title = (EditText) dialogView.findViewById(R.id.title);
+                final EditText author = (EditText) dialogView.findViewById(R.id.author);
+                dialog.show();
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+
+                title.addTextChangedListener(new TextWatcher() {
                     @Override
-                    public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                        EditText title = (EditText) dialogView.findViewById(R.id.title);
-                        EditText author = (EditText) dialogView.findViewById(R.id.author);
-                        System.out.println("TITRE = " + title.getText().toString());
-                        if (!title.getText().toString().isEmpty() && !author.getText().toString().isEmpty()) {
-                            ((AlertDialog)dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        // DO NOTHING
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        // DO NOTHING
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (allFieldsAreComplete(s, author)) {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                         } else {
-                            ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                         }
-                        return true;
                     }
                 });
 
-                dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                author.addTextChangedListener(new TextWatcher() {
                     @Override
-                    public void onShow(DialogInterface dialog) {
-                        ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        // DO NOTHING
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        // DO NOTHING
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (allFieldsAreComplete(s, title)) {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                        } else {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                        }
                     }
                 });
-                dialog.show();
+
+
 
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private boolean allFieldsAreComplete(Editable v1, EditText v2) {
+        return !TextUtils.isEmpty(v1) && !TextUtils.isEmpty(v2.getText());
     }
 
     private class DialogListenerClickNewDashboard implements DialogInterface.OnClickListener, AsyncTaskResponse {
