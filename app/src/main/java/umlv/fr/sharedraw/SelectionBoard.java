@@ -43,6 +43,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
 
+
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
