@@ -136,8 +136,8 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         @Override
         public void onClick(DialogInterface dialog, int which) {
             EditText title = (EditText) dialogView.findViewById(R.id.title);
-            this.title = title.getText().toString();
             EditText author = (EditText) dialogView.findViewById(R.id.author);
+            this.title = title.getText().toString();
             this.author = author.getText().toString();
 
             Toast.makeText(getApplicationContext(), title.getText().toString(), Toast.LENGTH_SHORT).show();
