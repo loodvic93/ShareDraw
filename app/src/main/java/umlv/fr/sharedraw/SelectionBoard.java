@@ -16,7 +16,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,13 +40,15 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         httpRequest.setDelegate(this);
         httpRequest.execute("getListOfDashboard", getString(R.string.server));
 
-        ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
+        final ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
 
 
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+                HashMap<String,String> map = listItem.get(position);
+                createAndLaunchDialogBox(map.get("titre"));
                 //TODO methode pour lancer un board
             }
         });
@@ -110,76 +111,87 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     public boolean onOptionsItemSelected(final MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add:
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-                //On instancie notre layout en tant que View
-                LayoutInflater factory = LayoutInflater.from(this);
-                final View dialogView = factory.inflate(R.layout.dialog_layout, null);
-                builder.setView(dialogView);
-                builder.setTitle("Please write informations");
-                // Set up the buttons
-                builder.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
-
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-
-
-                final AlertDialog dialog = builder.create();
-                final EditText title = (EditText) dialogView.findViewById(R.id.title);
-                final EditText userName = (EditText) dialogView.findViewById(R.id.userName);
-                dialog.show();
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-
-
-                title.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        // DO NOTHING
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        // DO NOTHING
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        if (allFieldsAreComplete(s, userName)) {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                        } else {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                        }
-                    }
-                });
-
-                userName.addTextChangedListener(new TextWatcher() {
-                    @Override
-                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                        // DO NOTHING
-                    }
-
-                    @Override
-                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        // DO NOTHING
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                        if (allFieldsAreComplete(s, title)) {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
-                        } else {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
-                        }
-                    }
-                });
+                createAndLaunchDialogBox(null);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void createAndLaunchDialogBox(String currantTitle){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        //On instancie notre layout en tant que View
+        LayoutInflater factory = LayoutInflater.from(this);
+        final View dialogView = factory.inflate(R.layout.dialog_layout, null);
+        builder.setView(dialogView);
+        builder.setTitle("Please write informations");
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
+
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+
+        final AlertDialog dialog = builder.create();
+
+        final EditText title = (EditText) dialogView.findViewById(R.id.title);
+        final EditText userName = (EditText) dialogView.findViewById(R.id.userName);
+
+        dialog.show();
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+        if(currantTitle!=null){
+            title.setText(currantTitle);
+            title.setEnabled(false);
+        }else{
+            title.setEnabled(true);
+            title.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // DO NOTHING
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    // DO NOTHING
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (allFieldsAreComplete(s, userName)) {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                    } else {
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                    }
+                }
+            });
+        }
+
+        userName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // DO NOTHING
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // DO NOTHING
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (allFieldsAreComplete(s, title)) {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+                } else {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+                }
+            }
+        });
     }
 
     private boolean allFieldsAreComplete(Editable v1, EditText v2) {
