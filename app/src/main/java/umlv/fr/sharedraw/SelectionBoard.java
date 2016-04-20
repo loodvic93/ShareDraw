@@ -145,7 +145,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
             HttpRequest httpRequest = HttpRequest.createHttpRequest();
             httpRequest.setDelegate(this);
-            httpRequest.execute("postMessage", "192.168.1.87:7777", this.title, "&author=" + this.author + "&message={}");
+            httpRequest.execute("postMessage", "192.168.1.87:7777", this.title, "&author=" + this.author + "&message={\""+ author +"\": \"join\"}");
         }
 
         @Override
