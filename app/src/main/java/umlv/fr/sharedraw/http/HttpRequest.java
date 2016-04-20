@@ -63,9 +63,10 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
      *     </tr>
      *     <tr>
      *         <td>getMessage</td>
-     *         <td>server    : String</td>
-     *         <td>queueName : String</td>
-     *         <td>idMessage : String</td>
+     *         <td>server         : String</td>
+     *         <td>queueName      : String</td>
+     *         <td>idMessage      : String</td>
+     *         <td>Timeout in sec : String</td>
      *     </tr>
      * </table>
      * <br />
@@ -98,10 +99,10 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     @HttpRequestProperty(value = "getListOfDashboard")
     private String getListOfDashboard(String... params) {
+        if (params.length < 1) return null;
         URL url = getURL("http://" + params[1]);
-        System.out.println("URL = " + url.toString());
-        if (url == null) return null;
         try {
+            assert url != null;
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int code = connection.getResponseCode();
             System.out.println("CODE = " + code);
@@ -120,13 +121,12 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     @HttpRequestProperty(value = "postMessage")
     private String postNewMessage(String... params) {
+        if (params.length < 3) return null;
         URL url = getURL("http://" + params[1] + "/" + params[2]);
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("Accept", "application/json");
             connection.setDoInput(true);
             OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
             wr.write(params[3]);
@@ -144,7 +144,8 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     @HttpRequestProperty(value = "getMessage")
     private String getMessage(String... params) {
-        URL url = getURL("http://" + params[1] + "/" + params[2] + "/" + params[3]);
+        if (params.length < 4) return null;
+        URL url = getURL("http://" + params[1] + "/" + params[2] + "/" + params[3] + "?timeout=" + params[4]);
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
