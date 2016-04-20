@@ -48,17 +48,17 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
                 HashMap<String,String> map = listItem.get(position);
-                createAndLaunchDialogBox(map.get("titre"));
+                createAndLaunchDialogBox(map.get("title"));
                 //TODO methode pour lancer un board
             }
         });
     }
 
-    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String titre, String userName) {
+    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String title, String userName) {
         HashMap<String, String> map = new HashMap<>();
-        map.put("titre", titre);
+        map.put("title", title);
         map.put("userName", userName);
-        String nameOfImage = titre.substring(0, 1);
+        String nameOfImage = title.substring(0, 1);
         nameOfImage = nameOfImage.toLowerCase();
         map.put("img", String.valueOf(getResources().getIdentifier(nameOfImage, "drawable", this.getPackageName())));
         listItem.add(map);
@@ -68,20 +68,20 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         if (listViewBoard == null) return;
         SimpleAdapter adapter = new SimpleAdapter(this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
-                new String[]{"img", "titre", "userName"}, new int[]{R.id.img, R.id.titre, R.id.userName});
+                new String[]{"img", "title", "userName"}, new int[]{R.id.img, R.id.title, R.id.userName});
         listViewBoard.setAdapter(adapter);
     }
 
     private void resultToBoard(JSONArray json) {
         try {
             for (int i = 0; i < json.length(); i++) {
-                String titre = json.getString(i);
-                addNewBoard(listItem, titre, "");
+                String title = json.getString(i);
+                addNewBoard(listItem, title, "");
             }
             Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
                 @Override
                 public int compare(HashMap<String, String> lhs, HashMap<String, String> rhs) {
-                    return lhs.get("titre").compareTo(rhs.get("titre"));
+                    return lhs.get("title").compareTo(rhs.get("title"));
                 }
             });
             updateAndSetAdapter();
