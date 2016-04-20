@@ -1,16 +1,14 @@
 package umlv.fr.sharedraw;
 
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.InputType;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -42,25 +40,20 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         addNewBoard(listItem,"Titre Board 3","Description");
 
         //Création d'un SimpleAdapter qui se chargera de mettre les items présents dans notre list (listItem) dans la vue affichageitem
-        SimpleAdapter mSchedule = new SimpleAdapter (this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
+        SimpleAdapter adapter = new SimpleAdapter (this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
                 new String[] {"img", "titre", "description"}, new int[] {R.id.img, R.id.titre, R.id.description});
 
         //On attribue à notre listView l'adapter que l'on vient de créer
-        listViewBoard.setAdapter(mSchedule);
+        listViewBoard.setAdapter(adapter);
 
         //Enfin on met un écouteur d'évènement sur notre listView
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             @SuppressWarnings("unchecked")
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-
+                //TODO methode pour lancer un board
             }
         });
-
-        /* Test AsyncTask
-        HttpRequest httpRequest = HttpRequest.createHttpRequest();
-        httpRequest.setDelegate(this);
-        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345"); */
     }
 
     private void addNewBoard(ArrayList<HashMap<String, String>> listItem,String titre,String description){
@@ -76,6 +69,11 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     @Override
     public void onAsyncTaskFinished(String result) {
         // TODO: Call a method which draw the list view
+        HttpRequest httpRequest = HttpRequest.createHttpRequest();
+        httpRequest.setDelegate(this);
+        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345");
+
+
     }
 
 
@@ -89,29 +87,34 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.add:
-                Dialog dialog = new Dialog(this);
-                dialog.setContentView(R.layout.dialog_layout);
-                dialog.setTitle("Please write the title and this description");
+                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 
-                // Set up the input
-                /*final EditText title = new EditText(this);
-                final EditText description = new EditText(this);*/
+                //On instancie notre layout en tant que View
+                LayoutInflater factory = LayoutInflater.from(this);
+                final View dialogView = factory.inflate(R.layout.dialog_layout, null);
+                dialog.setView(dialogView);
+                dialog.setTitle("Please write informations");
 
                 // Set up the buttons
-                /*dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        //Toast.makeText(getApplicationContext(),title.getText().toString(),Toast.LENGTH_SHORT).show();
-                        //Toast.makeText(getApplicationContext(),description.getText().toString(),Toast.LENGTH_SHORT).show();
-                        //m_Text = input.getText().toString();
+                        EditText title = (EditText) dialogView.findViewById(R.id.title);
+                        EditText description = (EditText) dialogView.findViewById(R.id.description);
+
+                        Toast.makeText(getApplicationContext(),title.getText().toString(),Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getApplicationContext(),description.getText().toString(),Toast.LENGTH_SHORT).show();
+
+                        //TODO methode pour lancer un new board
                     }
                 });
+
                 dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.cancel();
                     }
-                });*/
+                });
 
                 dialog.show();
 
