@@ -8,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +22,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import umlv.fr.sharedraw.http.AsyncTaskResponse;
@@ -38,7 +39,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
         HttpRequest httpRequest = HttpRequest.createHttpRequest();
         httpRequest.setDelegate(this);
-        httpRequest.execute("getListOfDashboard", "192.168.1.87:7777");
+        httpRequest.execute("getListOfDashboard", getString(R.string.server));
 
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
 
@@ -51,10 +52,10 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         });
     }
 
-    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String titre, String description) {
+    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String titre, String userName) {
         HashMap<String, String> map = new HashMap<>();
         map.put("titre", titre);
-        map.put("description", description);
+        map.put("userName", userName);
         String nameOfImage = titre.substring(0, 1);
         nameOfImage = nameOfImage.toLowerCase();
         map.put("img", String.valueOf(getResources().getIdentifier(nameOfImage, "drawable", this.getPackageName())));
@@ -65,7 +66,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         if (listViewBoard == null) return;
         SimpleAdapter adapter = new SimpleAdapter(this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
-                new String[]{"img", "titre", "description"}, new int[]{R.id.img, R.id.titre, R.id.author});
+                new String[]{"img", "titre", "userName"}, new int[]{R.id.img, R.id.titre, R.id.userName});
         listViewBoard.setAdapter(adapter);
     }
 
@@ -75,6 +76,12 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                 String titre = json.getString(i);
                 addNewBoard(listItem, titre, "");
             }
+            Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
+                @Override
+                public int compare(HashMap<String, String> lhs, HashMap<String, String> rhs) {
+                    return lhs.get("titre").compareTo(rhs.get("titre"));
+                }
+            });
             updateAndSetAdapter();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -122,7 +129,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
                 final AlertDialog dialog = builder.create();
                 final EditText title = (EditText) dialogView.findViewById(R.id.title);
-                final EditText author = (EditText) dialogView.findViewById(R.id.author);
+                final EditText userName = (EditText) dialogView.findViewById(R.id.userName);
                 dialog.show();
                 dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
@@ -140,7 +147,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
                     @Override
                     public void afterTextChanged(Editable s) {
-                        if (allFieldsAreComplete(s, author)) {
+                        if (allFieldsAreComplete(s, userName)) {
                             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                         } else {
                             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
@@ -148,7 +155,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                     }
                 });
 
-                author.addTextChangedListener(new TextWatcher() {
+                userName.addTextChangedListener(new TextWatcher() {
                     @Override
                     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                         // DO NOTHING
@@ -168,9 +175,6 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
                         }
                     }
                 });
-
-
-
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -183,7 +187,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
     private class DialogListenerClickNewDashboard implements DialogInterface.OnClickListener, AsyncTaskResponse {
         private View dialogView;
-        private String author;
+        private String userName;
         private String title;
 
         DialogListenerClickNewDashboard(View dialogView) {
@@ -193,23 +197,24 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         @Override
         public void onClick(DialogInterface dialog, int which) {
             EditText title = (EditText) dialogView.findViewById(R.id.title);
-            EditText author = (EditText) dialogView.findViewById(R.id.author);
+            EditText userName = (EditText) dialogView.findViewById(R.id.userName);
             this.title = title.getText().toString();
-            this.author = author.getText().toString();
+            this.userName = userName.getText().toString();
 
-            Toast.makeText(getApplicationContext(), title.getText().toString(), Toast.LENGTH_SHORT).show();
-            Toast.makeText(getApplicationContext(), author.getText().toString(), Toast.LENGTH_SHORT).show();
+            String titleName = this.title.replaceAll(" ","_");
+            String userNameName = this.userName.replaceAll(" ","_");
 
             HttpRequest httpRequest = HttpRequest.createHttpRequest();
             httpRequest.setDelegate(this);
-            httpRequest.execute("postMessage", "192.168.1.87:7777", this.title, "&author=" + this.author + "&message={\""+ author +"\": \"join\"}");
+            httpRequest.execute("postMessage", getString(R.string.server), titleName, "&author=" + userNameName + "&message={\""+ userNameName +"\": \"join\"}");
         }
 
         @Override
         public void onAsyncTaskFinished(String result) {
             if (result == null) return;
+            System.out.println("RESULT ="+result);
             Intent intent = new Intent(SelectionBoard.this, DashboardActivity.class);
-            intent.putExtra("author", author);
+            intent.putExtra("userName", userName);
             intent.putExtra("title", title);
             finish();
             startActivity(intent);
