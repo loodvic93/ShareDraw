@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,6 +14,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +31,10 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selection_board);
+
+        HttpRequest httpRequest = HttpRequest.createHttpRequest();
+        httpRequest.setDelegate(this);
+        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345");
 
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
 
@@ -69,11 +78,16 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     @Override
     public void onAsyncTaskFinished(String result) {
         // TODO: Call a method which draw the list view
-        HttpRequest httpRequest = HttpRequest.createHttpRequest();
-        httpRequest.setDelegate(this);
-        httpRequest.execute("getListOfDashboard", "127.0.0.1:12345");
+        if(result==null){
+            return;
+        }
+        try {
+            JSONArray jsonArray = new JSONArray(result);
 
 
+        }catch (JSONException e){
+            Log.d("Problem witch result",e);
+        }
     }
 
 
