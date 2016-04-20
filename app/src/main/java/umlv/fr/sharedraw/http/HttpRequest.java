@@ -105,7 +105,6 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             assert url != null;
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int code = connection.getResponseCode();
-            System.out.println("CODE = " + code);
             if (code == 200) {
                 return getStringFromInputStream(connection.getInputStream());
             } else {
@@ -127,9 +126,10 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
+            connection.setRequestProperty("Accept-Charset", "UTF-8");
             connection.setDoInput(true);
             OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
-            wr.write(params[3]);
+            connection.getOutputStream().write(params[3].getBytes("UTF-8"));
             wr.flush();
             int code = connection.getResponseCode();
             if (code == 200) {
@@ -174,25 +174,18 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
     }
 
     private String getStringFromInputStream(InputStream is) {
-        BufferedReader br = null;
-        StringBuilder sb = new StringBuilder();
-        String line;
+        String inputLine;
+        StringBuilder response = new StringBuilder();
         try {
-            br = new BufferedReader(new InputStreamReader(is));
-            while ((line = br.readLine()) != null) {
-                sb.append(line);
+            BufferedReader in = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
             }
+            in.close();
         } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+            Log.d("Cannot read response", e.getMessage());
+            return null;
         }
-        return sb.toString();
+        return response.toString();
     }
 }
