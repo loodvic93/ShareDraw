@@ -22,7 +22,8 @@ import java.util.Map;
  * This class permit to do HTTP Request to a web service in a AsyncTask
  * Don't forget to set the delegate to recover AsyncTask result
  */
-public class HttpRequest extends AsyncTask<String, Integer, String> {
+public class HttpRequest extends AsyncTask<String, Void, String> {
+    private final static String CLASS_NAME = HttpRequest.class.getCanonicalName();
     private final Map<String, Method> methods;
     private AsyncTaskResponse delegate;
 
@@ -31,6 +32,10 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
         delegate = null;
     }
 
+    /**
+     * Factory method to instantiate a HttpRequest object
+     * @return Return an HttpRequest
+     */
     public static HttpRequest createHttpRequest() {
         HttpRequest httpRequest = new HttpRequest();
         for (Method m : HttpRequest.class.getDeclaredMethods()) {
@@ -44,7 +49,8 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     /**
      * Execute the HTTP Request
-     * @param params must be not null and must have this format: Method to call, parameters to give to the method<br /><br />
+     * @param params must be not null and must have this format: Method to call, parameters to give to the method
+     * <br /><br />
      * Methods list to give in first argument to executor:<br />
      * <table>
      *     <tr>
@@ -59,7 +65,7 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
      *         <td>postMessage</td>
      *         <td>server    : String</td>
      *         <td>queueName : String</td>
-     *         <td>message   : String</td>
+     *         <td>message   : JSON as String</td>
      *     </tr>
      *     <tr>
      *         <td>getMessage</td>
@@ -80,10 +86,10 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             if (m == null) return null;
             return (String)m.invoke(HttpRequest.this, new Object[] { params });
         } catch (IllegalAccessException e) {
-            Log.e("Cannot access to : ", params[0]);
+            Log.e(CLASS_NAME, "This method (" + params[0] + ") doesn't exist");
             return null;
         } catch (InvocationTargetException e) {
-            Log.e("Invalid method : ", params[0]);
+            Log.e(CLASS_NAME, "Cannot invoke this method : " + params[0]);
             return null;
         }
     }
@@ -99,10 +105,13 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
 
     @HttpRequestProperty(value = "getListOfDashboard")
     private String getListOfDashboard(String... params) {
-        if (params.length < 1) return null;
+        if (params.length < 2) {
+            Log.e(CLASS_NAME, "This method (getListOfDashboard) must have few arguments: server(String)");
+            return null;
+        }
         URL url = getURL("http://" + params[1]);
+        if (url == null) return null;
         try {
-            assert url != null;
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int code = connection.getResponseCode();
             if (code == 200) {
@@ -112,15 +121,17 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             }
 
         } catch (IOException e) {
-            Log.d("Cannot connect to ", params[1]);
-            e.printStackTrace();
+            Log.e(CLASS_NAME, "Cannot connect to " + params[1]);
             return null;
         }
     }
 
     @HttpRequestProperty(value = "postMessage")
     private String postNewMessage(String... params) {
-        if (params.length < 3) return null;
+        if (params.length < 4) {
+            Log.e(CLASS_NAME, "This method (postMessage) must have few arguments: server(String), queue(String), message(JSON as String)");
+            return null;
+        }
         URL url = getURL("http://" + params[1] + "/" + params[2]);
         if (url == null) return null;
         try {
@@ -137,14 +148,17 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             }
             return null;
         } catch (IOException e) {
-            Log.d("Cannot connect to ", params[1]);
+            Log.e(CLASS_NAME, "Cannot connect to " + params[1]);
             return null;
         }
     }
 
     @HttpRequestProperty(value = "getMessage")
     private String getMessage(String... params) {
-        if (params.length < 4) return null;
+        if (params.length < 5) {
+            Log.e(CLASS_NAME, "This method (getMessage) must have few arguments: server(String), queue(String), idMessage(String), timeout(String in sec)");
+            return null;
+        }
         URL url = getURL("http://" + params[1] + "/" + params[2] + "/" + params[3] + "?timeout=" + params[4]);
         if (url == null) return null;
         try {
@@ -155,7 +169,7 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             }
             return null;
         } catch (IOException e) {
-            Log.d("Cannot connect to ", params[1]);
+            Log.e(CLASS_NAME, "Cannot connect to " + params[1]);
             return null;
         }
     }
@@ -164,7 +178,7 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
         try {
             return new URL(url);
         } catch (MalformedURLException e) {
-            Log.d("URL is malformed : ", url);
+            Log.e(CLASS_NAME, "URL is malformed" + url);
             return null;
         }
     }
@@ -183,7 +197,7 @@ public class HttpRequest extends AsyncTask<String, Integer, String> {
             }
             in.close();
         } catch (IOException e) {
-            Log.d("Cannot read response", e.getMessage());
+            Log.e(CLASS_NAME, "Cannot read response from the server");
             return null;
         }
         return response.toString();
