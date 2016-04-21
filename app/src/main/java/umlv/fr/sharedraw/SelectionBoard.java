@@ -76,6 +76,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         try {
             for (int i = 0; i < json.length(); i++) {
                 String title = json.getString(i);
+                title = title.replaceAll("_"," ");
                 addNewBoard(listItem, title, "");
             }
             Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
