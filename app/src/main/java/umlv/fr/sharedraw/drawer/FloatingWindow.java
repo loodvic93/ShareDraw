@@ -106,5 +106,4 @@ public class FloatingWindow extends Service {
         super.onDestroy();
         stopSelf();
     }
-
 }
