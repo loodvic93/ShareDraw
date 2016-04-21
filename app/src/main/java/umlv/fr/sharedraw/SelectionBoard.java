@@ -16,7 +16,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
-import umlv.fr.sharedraw.drawer.FloatingWindow;
 import umlv.fr.sharedraw.http.AsyncTaskResponse;
 import umlv.fr.sharedraw.http.HttpRequest;
 
@@ -133,7 +131,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
             public void onClick(DialogInterface dialog, int which) {
                 EditText title = (EditText) dialogView.findViewById(R.id.title);
                 EditText userName = (EditText) dialogView.findViewById(R.id.userName);
-                launchNextActivity(userName.getText().toString(), title.getText().toString());
+                launchNextActivity(userName.getText().toString().replaceAll(" ", "_"), title.getText().toString().replaceAll(" ", "_"));
             }
         });
 
@@ -211,17 +209,19 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         intent.putExtra("username", username);
         intent.putExtra("title", title);
         startActivityForResult(intent, RESULT);
-        startService(new Intent(SelectionBoard.this,FloatingWindow.class));
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case RESULT:
-                String username = data.getStringExtra("username");
-                String title = data.getStringExtra("title");
-                HttpRequest httpRequest = HttpRequest.createHttpRequest();
-                httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"leave\"}");
+                if (data != null) {
+                    String username = data.getStringExtra("username");
+                    String title = data.getStringExtra("title");
+                    HttpRequest httpRequest = HttpRequest.createHttpRequest();
+                    httpRequest.setDelegate(null);
+                    httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username + "\": \"leave\"}");
+                }
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);

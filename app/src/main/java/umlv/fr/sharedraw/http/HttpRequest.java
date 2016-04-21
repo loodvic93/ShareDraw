@@ -165,7 +165,7 @@ public class HttpRequest extends AsyncTask<String, Void, String> {
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-               int code = connection.getResponseCode();
+            int code = connection.getResponseCode();
             if (code == 200) {
                 return getStringFromInputStream(connection.getInputStream());
             }

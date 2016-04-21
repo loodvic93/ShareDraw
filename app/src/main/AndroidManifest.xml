@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".DashboardActivity"/>
-        <service android:name=".drawer.FloatingWindow"></service>
+        <service android:name=".drawer.FloatingWindow"/>
     </application>
 
 </manifest>

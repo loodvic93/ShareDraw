@@ -7,7 +7,9 @@ import android.support.v7.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
+import umlv.fr.sharedraw.drawer.FloatingWindow;
 import umlv.fr.sharedraw.http.HttpRequest;
+
 
 public class DashboardActivity extends AppCompatActivity {
     private String username;
@@ -19,6 +21,7 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         initVariable(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
+        startService(new Intent(DashboardActivity.this,FloatingWindow.class));
     }
 
     @Override
@@ -31,21 +34,20 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
         HttpRequest httpRequest = HttpRequest.createHttpRequest();
         httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"leave\"}");
+        super.onPause();
     }
 
     @Override
     protected void onPostResume() {
-        super.onPostResume();
         HttpRequest httpRequest = HttpRequest.createHttpRequest();
         httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"join\"}");
+        super.onPostResume();
     }
 
     @Override
     public void onBackPressed() {
-        System.out.println("BUTTON");
         Intent intent = new Intent();
         intent.putExtra("username", username);
         intent.putExtra("title", title);
@@ -62,7 +64,8 @@ public class DashboardActivity extends AppCompatActivity {
             Intent intent = getIntent();
             username = intent.getStringExtra("username");
             title = intent.getStringExtra("title");
+
         }
-        setTitle(title);
+        setTitle(title.replaceAll("_", " "));
     }
 }

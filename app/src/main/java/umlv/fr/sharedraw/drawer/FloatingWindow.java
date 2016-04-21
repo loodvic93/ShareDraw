@@ -13,7 +13,6 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 public class FloatingWindow extends Service {
 
@@ -37,20 +36,20 @@ public class FloatingWindow extends Service {
         ll.setBackgroundColor(Color.RED);
         LinearLayout.LayoutParams layoutParameteres = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, 400);
-        ll.setBackgroundColor(Color.argb(66,255,0,0));
+        ll.setBackgroundColor(Color.argb(66, 255, 0, 0));
         ll.setLayoutParams(layoutParameteres);
 
         final LayoutParams parameters = new LayoutParams(
                 500, 200, LayoutParams.TYPE_PHONE,
                 LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
-        parameters.gravity = Gravity.CENTER | Gravity.CENTER;
+        parameters.gravity = Gravity.CENTER;
         parameters.x = 0;
         parameters.y = 0;
 
-      Button     stop = new Button(this);
-    stop.setText("Stop");
-        ViewGroup.LayoutParams btnParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT);
+        Button stop = new Button(this);
+        stop.setText("Stop");
+        ViewGroup.LayoutParams btnParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         stop.setLayoutParams(btnParameters);
 
         ll.addView(stop);
@@ -96,7 +95,6 @@ public class FloatingWindow extends Service {
             public void onClick(View v) {
                 wm.removeView(ll);
                 stopSelf();
-                System.exit(0);
             }
         });
     }
