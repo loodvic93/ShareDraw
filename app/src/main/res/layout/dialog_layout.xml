@@ -7,14 +7,14 @@
     android:padding="5dp">
 
     <EditText
-        android:hint="Title"
+        android:hint="@string/title"
         android:layout_width="match_parent"
         android:layout_height= "wrap_content"
         android:id="@+id/title"
         android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ -1234567890"
         android:inputType="text" />
     <EditText
-        android:hint="UserName"
+        android:hint="@string/username"
         android:layout_width="match_parent"
         android:layout_height= "wrap_content"
         android:id="@+id/userName"

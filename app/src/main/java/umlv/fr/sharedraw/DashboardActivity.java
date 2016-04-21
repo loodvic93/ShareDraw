@@ -4,9 +4,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.MenuItem;
 
 import java.util.ArrayList;
+
+import umlv.fr.sharedraw.http.HttpRequest;
 
 public class DashboardActivity extends AppCompatActivity {
     private String username;
@@ -26,6 +27,20 @@ public class DashboardActivity extends AppCompatActivity {
         outState.putString("username", username);
         outState.putString("title", title);
         outState.putStringArrayList("connectedUser", connectedUser);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        HttpRequest httpRequest = HttpRequest.createHttpRequest();
+        httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"leave\"}");
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        HttpRequest httpRequest = HttpRequest.createHttpRequest();
+        httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"join\"}");
     }
 
     @Override

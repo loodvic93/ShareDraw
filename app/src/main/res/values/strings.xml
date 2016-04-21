@@ -4,4 +4,6 @@
     <string name="add_new_board">add new board</string>
     <string name="server">109.26.15.199:7777</string>
     <string name="clear_canvas">Clear Canvas</string>
+    <string name="title">Title</string>
+    <string name="username">Username</string>
 </resources>

@@ -126,7 +126,14 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         builder.setView(dialogView);
         builder.setTitle("Please write informations");
         // Set up the buttons
-        builder.setPositiveButton("OK", new DialogListenerClickNewDashboard(dialogView));
+        builder.setPositiveButton("OK",new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                EditText title = (EditText) dialogView.findViewById(R.id.title);
+                EditText userName = (EditText) dialogView.findViewById(R.id.userName);
+                launchNextActivity(userName.getText().toString(), title.getText().toString());
+            }
+        });
 
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
             @Override
@@ -195,37 +202,6 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
     private boolean allFieldsAreComplete(Editable v1, EditText v2) {
         return !TextUtils.isEmpty(v1) && !TextUtils.isEmpty(v2.getText());
-    }
-
-    private class DialogListenerClickNewDashboard implements DialogInterface.OnClickListener, AsyncTaskResponse {
-        private View dialogView;
-        private String username;
-        private String title;
-
-        DialogListenerClickNewDashboard(View dialogView) {
-            this.dialogView = dialogView;
-        }
-
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            EditText title = (EditText) dialogView.findViewById(R.id.title);
-            EditText userName = (EditText) dialogView.findViewById(R.id.userName);
-            this.title = title.getText().toString();
-            this.username = userName.getText().toString();
-
-            HttpRequest httpRequest = HttpRequest.createHttpRequest();
-            httpRequest.setDelegate(this);
-            httpRequest.execute("postMessage", getString(R.string.server),
-                    this.title.replaceAll(" ","_"),
-                    "&author=" + this.username.replaceAll(" ","_") + "&message={\""+ this.username.replaceAll(" ","_") +"\": \"join\"}");
-        }
-
-        @Override
-        public void onAsyncTaskFinished(String result) {
-            if (result == null) return;
-            System.out.println("RESULT ="+result);
-            launchNextActivity(username, title);
-        }
     }
 
     private void launchNextActivity(String username, String title) {
