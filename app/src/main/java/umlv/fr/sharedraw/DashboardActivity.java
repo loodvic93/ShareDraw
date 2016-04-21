@@ -1,44 +1,53 @@
 package umlv.fr.sharedraw;
 
+import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
-import android.view.View;
+import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 
-import java.util.Random;
-
-import umlv.fr.sharedraw.drawer.CanvasView;
+import java.util.ArrayList;
 
 public class DashboardActivity extends AppCompatActivity {
-    private String author;
+    private String username;
     private String title;
-    private CanvasView canvasView;
+    private ArrayList<String> connectedUser = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Intent intent = getIntent();
-        author = intent.getStringExtra("author");
-        title = intent.getStringExtra("title");
+        initVariable(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-        canvasView = (CanvasView)findViewById(R.id.canvas);
-    }
-
-    public void clearCanvas(View v) {
-        canvasView.clearCanvas();
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("author", author);
+        outState.putString("username", username);
         outState.putString("title", title);
+        outState.putStringArrayList("connectedUser", connectedUser);
+    }
+
+    @Override
+    public void onBackPressed() {
+        System.out.println("BUTTON");
+        Intent intent = new Intent();
+        intent.putExtra("username", username);
+        intent.putExtra("title", title);
+        setResult(Activity.RESULT_OK, intent);
+        finish();
+    }
+
+    private void initVariable(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            username = savedInstanceState.getString("username");
+            title = savedInstanceState.getString("title");
+            connectedUser = savedInstanceState.getStringArrayList("connectedUser");
+        } else {
+            Intent intent = getIntent();
+            username = intent.getStringExtra("username");
+            title = intent.getStringExtra("title");
+        }
+        setTitle(title);
     }
 }

@@ -30,6 +30,7 @@ import umlv.fr.sharedraw.http.HttpRequest;
 
 public class SelectionBoard extends AppCompatActivity implements AsyncTaskResponse {
     private final ArrayList<HashMap<String, String>> listItem = new ArrayList<>();
+    private static final int RESULT = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,15 +42,12 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         httpRequest.execute("getListOfDashboard", getString(R.string.server));
 
         final ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
-
-
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
                 HashMap<String,String> map = listItem.get(position);
                 createAndLaunchDialogBox(map.get("title"));
-                //TODO methode pour lancer un board
             }
         });
     }
@@ -57,7 +55,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
     private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String title, String userName) {
         HashMap<String, String> map = new HashMap<>();
         map.put("title", title);
-        map.put("userName", userName);
+        map.put("username", userName);
         String nameOfImage = title.substring(0, 1);
         nameOfImage = nameOfImage.toLowerCase();
         map.put("img", String.valueOf(getResources().getIdentifier(nameOfImage, "drawable", this.getPackageName())));
@@ -68,7 +66,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         if (listViewBoard == null) return;
         SimpleAdapter adapter = new SimpleAdapter(this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
-                new String[]{"img", "title", "userName"}, new int[]{R.id.img, R.id.title, R.id.userName});
+                new String[]{"img", "title", "username"}, new int[]{R.id.img, R.id.title, R.id.userName});
         listViewBoard.setAdapter(adapter);
     }
 
@@ -82,7 +80,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
             Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
                 @Override
                 public int compare(HashMap<String, String> lhs, HashMap<String, String> rhs) {
-                    return lhs.get("title").compareTo(rhs.get("title"));
+                    return lhs.get("title").compareToIgnoreCase(rhs.get("title"));
                 }
             });
             updateAndSetAdapter();
@@ -201,7 +199,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
 
     private class DialogListenerClickNewDashboard implements DialogInterface.OnClickListener, AsyncTaskResponse {
         private View dialogView;
-        private String userName;
+        private String username;
         private String title;
 
         DialogListenerClickNewDashboard(View dialogView) {
@@ -213,27 +211,41 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
             EditText title = (EditText) dialogView.findViewById(R.id.title);
             EditText userName = (EditText) dialogView.findViewById(R.id.userName);
             this.title = title.getText().toString();
-            this.userName = userName.getText().toString();
-
-            String titleName = this.title.replaceAll(" ","_");
-            String userNameName = this.userName.replaceAll(" ","_");
+            this.username = userName.getText().toString();
 
             HttpRequest httpRequest = HttpRequest.createHttpRequest();
             httpRequest.setDelegate(this);
-            httpRequest.execute("postMessage", getString(R.string.server), titleName, "&author=" + userNameName + "&message={\""+ userNameName +"\": \"join\"}");
+            httpRequest.execute("postMessage", getString(R.string.server),
+                    this.title.replaceAll(" ","_"),
+                    "&author=" + this.username.replaceAll(" ","_") + "&message={\""+ this.username.replaceAll(" ","_") +"\": \"join\"}");
         }
 
         @Override
         public void onAsyncTaskFinished(String result) {
             if (result == null) return;
             System.out.println("RESULT ="+result);
-            Intent intent = new Intent(SelectionBoard.this, DashboardActivity.class);
-            intent.putExtra("userName", userName);
-            intent.putExtra("title", title);
-            finish();
-            startActivity(intent);
+            launchNextActivity(username, title);
         }
     }
 
+    private void launchNextActivity(String username, String title) {
+        Intent intent = new Intent(SelectionBoard.this, DashboardActivity.class);
+        intent.putExtra("username", username);
+        intent.putExtra("title", title);
+        startActivityForResult(intent, RESULT);
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case RESULT:
+                String username = data.getStringExtra("username");
+                String title = data.getStringExtra("title");
+                HttpRequest httpRequest = HttpRequest.createHttpRequest();
+                httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username  +"\": \"leave\"}");
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 }

@@ -100,7 +100,9 @@ public class HttpRequest extends AsyncTask<String, Void, String> {
      */
     @Override
     protected void onPostExecute(String result) {
-        delegate.onAsyncTaskFinished(result);
+        if (delegate != null) {
+            delegate.onAsyncTaskFinished(result);
+        }
     }
 
     @HttpRequestProperty(value = "getListOfDashboard")
