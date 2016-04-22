@@ -38,6 +38,7 @@ public class FloatingWindow extends Service {
 
         final View myview = li.inflate(R.layout.dialog_layout, null);
 
+
         ll = new LinearLayout(this);
         ll.setBackgroundColor(Color.RED);
         LinearLayout.LayoutParams layoutParameteres = new LinearLayout.LayoutParams(
