@@ -18,9 +18,8 @@ import android.widget.LinearLayout;
 import umlv.fr.sharedraw.R;
 
 public class FloatingWindow extends Service {
-
-    WindowManager wm;
-    LinearLayout ll;
+    private WindowManager wm;
+    private LinearLayout ll;
 
     @Override
     public IBinder onBind(Intent intent) {

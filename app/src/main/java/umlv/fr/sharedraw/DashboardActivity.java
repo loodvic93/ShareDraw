@@ -47,7 +47,6 @@ public class DashboardActivity extends ServiceManager {
 
     @Override
     protected void onDestroy() {
-        signalToQuitDashboard();
         doUnbindService();
         super.onDestroy();
     }
