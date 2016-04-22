@@ -12,8 +12,8 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".SelectionBoard"
-            android:label="@string/select_dashboard">
-            <intent-filter android:label="@string/app_name">
+            android:label="@string/app_name">
+            <intent-filter android:label="@string/select_dashboard">
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -21,6 +21,12 @@
         </activity>
         <activity android:name=".DashboardActivity"/>
         <service android:name=".drawer.FloatingWindow"/>
+        <service android:name=".http.ServiceHttp"
+            android:process=":processServiceHttp" >
+            <intent-filter>
+                <action android:name="umlv.fr.sharedraw.http.ServiceHttp" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

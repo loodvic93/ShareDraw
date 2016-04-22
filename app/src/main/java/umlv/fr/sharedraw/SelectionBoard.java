@@ -1,10 +1,12 @@
 package umlv.fr.sharedraw;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Message;
+import android.os.RemoteException;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -25,31 +27,100 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 
-import umlv.fr.sharedraw.http.AsyncTaskResponse;
-import umlv.fr.sharedraw.http.HttpRequest;
+import umlv.fr.sharedraw.http.ServiceHttp;
 
-public class SelectionBoard extends AppCompatActivity implements AsyncTaskResponse {
+public class SelectionBoard extends ServiceManager {
     private final ArrayList<HashMap<String, String>> listItem = new ArrayList<>();
     private static final int RESULT = 1;
+    private boolean mIsBound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_selection_board);
 
-        HttpRequest httpRequest = HttpRequest.createHttpRequest();
-        httpRequest.setDelegate(this);
-        httpRequest.execute("getListOfDashboard", getString(R.string.server));
+        doBindService();
 
         final ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                HashMap<String,String> map = listItem.get(position);
+                HashMap<String, String> map = listItem.get(position);
                 createAndLaunchDialogBox(map.get("title"));
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        doUnbindService();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        listItem.clear();
+        doBindService();
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        doUnbindService();
+        super.onPause();
+    }
+
+    @Override
+    protected void onServiceStarted() {
+        doAfterBinding();
+    }
+
+    @Override
+    protected void onMsgGetListDashboard(Message msg) {
+        try {
+            Bundle data = msg.getData();
+            String result = data.getString("response");
+            if (result == null) return;
+            resultToBoard(new JSONArray(result));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void doBindService() {
+        bindService(new Intent(SelectionBoard.this, ServiceHttp.class), mConnection, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    @Override
+    protected void doUnbindService() {
+        if (mIsBound) {
+            if (mService != null) {
+                try {
+                    Message msg = Message.obtain(null, ServiceHttp.MSG_UNREGISTER_CLIENT);
+                    msg.replyTo = mMessenger;
+                    mService.send(msg);
+                } catch (RemoteException ignored) {
+
+                }
+            }
+            unbindService(mConnection);
+            mIsBound = false;
+        }
+    }
+
+    private void doAfterBinding() {
+        try {
+            Message msg = Message.obtain(null, ServiceHttp.MSG_GET_LIST_DASHBOARD, this.hashCode(), 0);
+            Bundle bundle = new Bundle();
+            bundle.putStringArray("params", new String[]{"getListOfDashboard", getString(R.string.server)});
+            msg.setData(bundle);
+            mService.send(msg);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String title, String userName) {
@@ -74,7 +145,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         try {
             for (int i = 0; i < json.length(); i++) {
                 String title = json.getString(i);
-                title = title.replaceAll("_"," ");
+                title = title.replaceAll("_", " ");
                 addNewBoard(listItem, title, "");
             }
             Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
@@ -88,17 +159,6 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void onAsyncTaskFinished(String result) {
-        if (result == null) return;
-        try {
-            resultToBoard(new JSONArray(result));
-        } catch (JSONException e) {
-            //
-        }
-    }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -117,7 +177,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         }
     }
 
-    private void createAndLaunchDialogBox(String currantTitle){
+    private void createAndLaunchDialogBox(String currantTitle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         //On instancie notre layout en tant que View
@@ -126,7 +186,7 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         builder.setView(dialogView);
         builder.setTitle("Please write informations");
         // Set up the buttons
-        builder.setPositiveButton("OK",new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 EditText title = (EditText) dialogView.findViewById(R.id.title);
@@ -151,10 +211,10 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
-        if(currantTitle!=null){
+        if (currantTitle != null) {
             title.setText(currantTitle);
             title.setEnabled(false);
-        }else{
+        } else {
             title.setEnabled(true);
             title.addTextChangedListener(new TextWatcher() {
                 @Override
@@ -209,22 +269,5 @@ public class SelectionBoard extends AppCompatActivity implements AsyncTaskRespon
         intent.putExtra("username", username);
         intent.putExtra("title", title);
         startActivityForResult(intent, RESULT);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case RESULT:
-                if (data != null) {
-                    String username = data.getStringExtra("username");
-                    String title = data.getStringExtra("title");
-                    HttpRequest httpRequest = HttpRequest.createHttpRequest();
-                    httpRequest.setDelegate(null);
-                    httpRequest.execute("postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username + "\": \"leave\"}");
-                }
-                break;
-            default:
-                super.onActivityResult(requestCode, resultCode, data);
-        }
     }
 }
