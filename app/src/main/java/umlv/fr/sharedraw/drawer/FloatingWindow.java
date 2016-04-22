@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,8 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.LinearLayout;
+
+import umlv.fr.sharedraw.R;
 
 public class FloatingWindow extends Service {
 
@@ -30,7 +33,10 @@ public class FloatingWindow extends Service {
         // TODO Auto-generated method stub
         super.onCreate();
 
+        LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        final View myview = li.inflate(R.layout.dialog_layout, null);
 
         ll = new LinearLayout(this);
         ll.setBackgroundColor(Color.RED);
@@ -52,7 +58,9 @@ public class FloatingWindow extends Service {
         ViewGroup.LayoutParams btnParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         stop.setLayoutParams(btnParameters);
 
+        ll.addView(myview);
         ll.addView(stop);
+
         wm.addView(ll, parameters);
 
         ll.setOnTouchListener(new View.OnTouchListener() {
