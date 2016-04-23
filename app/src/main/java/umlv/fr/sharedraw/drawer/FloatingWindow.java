@@ -35,7 +35,7 @@ public class FloatingWindow extends Service {
         LayoutInflater li = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
         wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
-        final View myview = li.inflate(R.layout.dialog_layout, null);
+        final View myview = li.inflate(R.layout.view_tools, null);
 
 
         ll = new LinearLayout(this);
