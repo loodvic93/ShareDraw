@@ -148,18 +148,20 @@ public class DashboardActivity extends ServiceManager {
             return;
         }
         Action action = Proxy.createAction(result);
-        if (action != null && !actionForCurrentUser.contains(action.getIdMessage())) {
-            actions.add(action);
-            if (action instanceof Admin) {
-                Admin adminAction = (Admin) action;
-                if (adminAction.isJoining()) {
-                    connectedUser.add(action.getAuthor());
-                } else {
-                    connectedUser.remove(action.getAuthor());
+        if (action != null) {
+            if (!actionForCurrentUser.contains(action.getIdMessage())) {
+                actions.add(action);
+                if (action instanceof Admin) {
+                    Admin adminAction = (Admin) action;
+                    if (adminAction.isJoining()) {
+                        connectedUser.add(action.getAuthor());
+                    } else {
+                        connectedUser.remove(action.getAuthor());
+                    }
                 }
             }
+            getPreviousActionsFromServer(action.getIdMessage() + 1);
         }
-        getPreviousActionsFromServer(action.getIdMessage() + 1);
     }
 
     private void getPreviousActionsFromServer(int id) throws RemoteException {
