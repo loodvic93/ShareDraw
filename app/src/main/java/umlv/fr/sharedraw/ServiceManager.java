@@ -13,7 +13,7 @@ import umlv.fr.sharedraw.http.ServiceHttp;
 
 public class ServiceManager extends AppCompatActivity {
     protected Messenger mService = null;
-    protected final Messenger mMessenger = new Messenger(new HttpHandler());
+    protected Messenger mMessenger = new Messenger(new HttpHandler());
     protected ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -33,8 +33,6 @@ public class ServiceManager extends AppCompatActivity {
             mService = null;
         }
     };
-
-
 
     protected class HttpHandler extends Handler {
         @Override

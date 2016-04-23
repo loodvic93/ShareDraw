@@ -73,7 +73,7 @@ public class ServiceHttp extends Service {
                 case MSG_GET_LIST_DASHBOARD:
                 case MSG_GET_MESSAGE:
                 case MSG_POST_MESSAGE:
-                    doRequest(msg);
+                    doRequest(msg, msg.what);
                     break;
                 default:
                     super.handleMessage(msg);
@@ -111,14 +111,15 @@ public class ServiceHttp extends Service {
      *            </tr>
      *            </table>
      *            <br />
+     * @param delegate Method to call after response
      */
-    private void doRequest(final Message msg) {
+    private void doRequest(final Message msg, int delegate) {
         Bundle data = msg.getData();
         final String[] params = data.getStringArray("params");
         if (params == null) return;
         final Method m = methods.get(params[0]);
         if (m == null) return;
-        sendResponseToClients(execute(m, params), msg.arg1);
+        sendResponseToClients(execute(m, params), msg.arg1, delegate);
     }
 
     private String execute(final Method m, final String[] params) {
@@ -131,16 +132,15 @@ public class ServiceHttp extends Service {
             });
             return stringFuture.get();
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
             Log.e(CLASS_NAME, "Request interrupted");
+            return null;
         }
-        return null;
     }
 
-    private void sendResponseToClients(String resp, int mValue) {
+    private void sendResponseToClients(String resp, int mValue, int delegate) {
         for (int i = mClients.size() - 1; i >= 0; i--) {
             try {
-                Message response = Message.obtain(null, MSG_GET_LIST_DASHBOARD, mValue, 0);
+                Message response = Message.obtain(null, delegate, mValue, 0);
                 Bundle bundle = new Bundle();
                 bundle.putString("response", resp);
                 response.setData(bundle);
@@ -214,7 +214,9 @@ public class ServiceHttp extends Service {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             int code = connection.getResponseCode();
             if (code == 200) {
-                return getStringFromInputStream(connection.getInputStream());
+                StringBuilder stringBuilder = new StringBuilder(getStringFromInputStream(connection.getInputStream()));
+                stringBuilder.insert(1, "\"id\": " + Integer.valueOf(params[3]) + ", ");
+                return stringBuilder.toString();
             }
             return null;
         } catch (IOException e) {

@@ -7,19 +7,30 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
 import android.util.Log;
-
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import umlv.fr.sharedraw.actions.Action;
+import umlv.fr.sharedraw.actions.Admin;
+import umlv.fr.sharedraw.actions.Proxy;
 import umlv.fr.sharedraw.drawer.FloatingWindow;
 import umlv.fr.sharedraw.http.ServiceHttp;
 
 
 public class DashboardActivity extends ServiceManager {
     private static final String CLASS_NAME = DashboardActivity.class.getCanonicalName();
+    private static final String TIMEOUT = "1";
+    private boolean mIsBound;
+    private ArrayList<String> connectedUser = new ArrayList<>();
+    private ArrayList<Action> actions = new ArrayList<>();
+    private ArrayList<Integer> actionForCurrentUser = new ArrayList<>();
+    private HashMap<String, String> messagesReceived = new HashMap<>();
+    private int currentAction = 0;
+    private boolean dashboardIsCompleteInit = false;
     private String username;
     private String title;
-    private ArrayList<String> connectedUser = new ArrayList<>();
-    private boolean mIsBound;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,7 +38,7 @@ public class DashboardActivity extends ServiceManager {
         doBindService();
         initVariable(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-        startService(new Intent(DashboardActivity.this,FloatingWindow.class));
+        startService(new Intent(DashboardActivity.this, FloatingWindow.class));
     }
 
     @Override
@@ -36,6 +47,10 @@ public class DashboardActivity extends ServiceManager {
         outState.putString("username", username);
         outState.putString("title", title);
         outState.putStringArrayList("connectedUser", connectedUser);
+        outState.putParcelableArrayList("actions", actions);
+        outState.putIntegerArrayList("actionForCurrentUser", actionForCurrentUser);
+        outState.putSerializable("messagesReceived", messagesReceived);
+        outState.putInt("currentAction", currentAction);
     }
 
     @Override
@@ -59,6 +74,7 @@ public class DashboardActivity extends ServiceManager {
 
     @Override
     protected void doBindService() {
+
         bindService(new Intent(DashboardActivity.this, ServiceHttp.class), mConnection, Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
@@ -82,12 +98,42 @@ public class DashboardActivity extends ServiceManager {
 
     @Override
     protected void onServiceStarted() {
-        signalToJoinDashboard();
+        if (actions.isEmpty()) {
+            signalToJoinDashboard();
+            try {
+                getPreviousActionsFromServer(0);
+            } catch (RemoteException e) {
+                Log.e(CLASS_NAME, "Cannot get previous actions from the server for this dashboard");
+            }
+        }
     }
 
     @Override
     protected void onMsgPostMsg(Message msg) {
-        // TODO When a response from service
+        Bundle data = msg.getData();
+        String result = data.getString("response");
+        if (result == null) return;
+        try {
+            JSONObject jsonObject = new JSONObject(result);
+            actionForCurrentUser.add(jsonObject.getInt("id"));
+        } catch (JSONException e) {
+            Log.e(CLASS_NAME, "An error has happen when " + username + " post a message to a server");
+        }
+    }
+
+    @Override
+    protected void onMsgGetMsg(Message msg) {
+        Bundle data = msg.getData();
+        String result = data.getString("response");
+        if (!dashboardIsCompleteInit) {
+            try {
+                initDashboard(result);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // TODO Case if it's not an init
     }
 
     @Override
@@ -96,11 +142,39 @@ public class DashboardActivity extends ServiceManager {
         finish();
     }
 
+    private void initDashboard(String result) throws RemoteException {
+        if (result == null) {
+            dashboardIsCompleteInit = true;
+            return;
+        }
+        Action action = Proxy.createAction(result);
+        if (action != null && !actionForCurrentUser.contains(action.getIdMessage())) {
+            actions.add(action);
+            if (action instanceof Admin) {
+                Admin adminAction = (Admin) action;
+                if (adminAction.isJoining()) {
+                    connectedUser.add(action.getAuthor());
+                } else {
+                    connectedUser.remove(action.getAuthor());
+                }
+            }
+        }
+        getPreviousActionsFromServer(action.getIdMessage() + 1);
+    }
+
+    private void getPreviousActionsFromServer(int id) throws RemoteException {
+        Message msg = Message.obtain(null, ServiceHttp.MSG_GET_MESSAGE, this.hashCode(), 0);
+        Bundle bundle = new Bundle();
+        bundle.putStringArray("params", new String[]{"getMessage", getString(R.string.server), title, Integer.toString(id), TIMEOUT});
+        msg.setData(bundle);
+        mService.send(msg);
+    }
+
     private void signalToJoinDashboard() {
         try {
             Message msg = Message.obtain(null, ServiceHttp.MSG_POST_MESSAGE, this.hashCode(), 0);
             Bundle bundle = new Bundle();
-            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username + "\": \"join\"}"});
+            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"admin\": \"join\"}"});
             msg.setData(bundle);
             mService.send(msg);
         } catch (RemoteException e) {
@@ -112,7 +186,7 @@ public class DashboardActivity extends ServiceManager {
         try {
             Message msg = Message.obtain(null, ServiceHttp.MSG_POST_MESSAGE, this.hashCode(), 0);
             Bundle bundle = new Bundle();
-            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"" + username + "\": \"leave\"}"});
+            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"admin\": \"leave\"}"});
             msg.setData(bundle);
             mService.send(msg);
         } catch (RemoteException e) {
@@ -120,16 +194,20 @@ public class DashboardActivity extends ServiceManager {
         }
     }
 
+    @SuppressWarnings("all")
     private void initVariable(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             username = savedInstanceState.getString("username");
             title = savedInstanceState.getString("title");
             connectedUser = savedInstanceState.getStringArrayList("connectedUser");
+            actions = savedInstanceState.getParcelableArrayList("actions");
+            currentAction = savedInstanceState.getInt("currentAction");
+            actionForCurrentUser = savedInstanceState.getIntegerArrayList("actionForCurrentUser");
+            messagesReceived = (HashMap<String, String>) savedInstanceState.getSerializable("messagesReceived");
         } else {
             Intent intent = getIntent();
             username = intent.getStringExtra("username");
             title = intent.getStringExtra("title");
-
         }
         setTitle(title.replaceAll("_", " "));
     }
