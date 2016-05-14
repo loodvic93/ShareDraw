@@ -14,7 +14,6 @@ import java.util.HashMap;
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Proxy;
-import umlv.fr.sharedraw.drawer.FloatingWindow;
 import umlv.fr.sharedraw.http.ServiceHttp;
 
 
@@ -38,7 +37,6 @@ public class DashboardActivity extends ServiceManager {
         doBindService();
         initVariable(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-        startService(new Intent(DashboardActivity.this, FloatingWindow.class));
     }
 
     @Override

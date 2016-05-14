@@ -14,21 +14,26 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.TextView;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 
 import umlv.fr.sharedraw.http.ServiceHttp;
 
 public class SelectionBoard extends ServiceManager {
-    private final ArrayList<HashMap<String, String>> listItem = new ArrayList<>();
+    private final ArrayList<String> listItem = new ArrayList<>();
+    private ArrayAdapter<String> arrayAdapter;
     private static final int RESULT = 1;
     private boolean mIsBound;
 
@@ -44,8 +49,8 @@ public class SelectionBoard extends ServiceManager {
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                HashMap<String, String> map = listItem.get(position);
-                createAndLaunchDialogBox(map.get("title"));
+                String title = listItem.get(position);
+                createAndLaunchDialogBox(title);
             }
         });
     }
@@ -121,22 +126,30 @@ public class SelectionBoard extends ServiceManager {
         }
     }
 
-    private void addNewBoard(ArrayList<HashMap<String, String>> listItem, String title, String userName) {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("title", title);
-        map.put("username", userName);
-        String nameOfImage = title.substring(0, 1);
-        nameOfImage = nameOfImage.toLowerCase();
-        map.put("img", String.valueOf(getResources().getIdentifier(nameOfImage, "drawable", this.getPackageName())));
-        listItem.add(map);
-    }
-
     private void updateAndSetAdapter() {
-        ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
-        if (listViewBoard == null) return;
-        SimpleAdapter adapter = new SimpleAdapter(this.getBaseContext(), listItem, R.layout.affichage_item_list_view,
-                new String[]{"img", "title", "username"}, new int[]{R.id.img, R.id.title, R.id.userName});
-        listViewBoard.setAdapter(adapter);
+        ListView lv = (ListView) findViewById(R.id.listView_board);
+        assert lv != null;
+
+        ListAdapter adapter = lv.getAdapter();
+        if (adapter == null) {
+            adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1) {
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    if (convertView == null) {
+                        convertView = getLayoutInflater().inflate(R.layout.activity_selection_board_item_list_view, null);
+                    }
+                    TextView title = (TextView) convertView.findViewById(R.id.title);
+                    title.setText(getItem(position));
+                    TextView firstLetter = (TextView)convertView.findViewById(R.id.firstLetter);
+                    firstLetter.setText(getItem(position).substring(0,1).toUpperCase());
+                    return convertView;
+                }
+            };
+            lv.setAdapter(adapter);
+        }
+        arrayAdapter = (ArrayAdapter<String>) adapter;
+        arrayAdapter.clear();
+        arrayAdapter.addAll(listItem);
     }
 
     private void resultToBoard(JSONArray json) {
@@ -144,12 +157,12 @@ public class SelectionBoard extends ServiceManager {
             for (int i = 0; i < json.length(); i++) {
                 String title = json.getString(i);
                 title = title.replaceAll("_", " ");
-                addNewBoard(listItem, title, "");
+                listItem.add(title);
             }
-            Collections.sort(listItem, new Comparator<HashMap<String, String>>() {
+            Collections.sort(listItem, new Comparator<String>() {
                 @Override
-                public int compare(HashMap<String, String> lhs, HashMap<String, String> rhs) {
-                    return lhs.get("title").compareToIgnoreCase(rhs.get("title"));
+                public int compare(String lhs, String rhs) {
+                    return lhs.compareToIgnoreCase(rhs);
                 }
             });
             updateAndSetAdapter();
@@ -180,7 +193,7 @@ public class SelectionBoard extends ServiceManager {
 
         //On instancie notre layout en tant que View
         LayoutInflater factory = LayoutInflater.from(this);
-        final View dialogView = factory.inflate(R.layout.dialog_layout, null);
+        final View dialogView = factory.inflate(R.layout.activity_selection_board_dialog_layout, null);
         builder.setView(dialogView);
         builder.setTitle("Please write informations");
         // Set up the buttons

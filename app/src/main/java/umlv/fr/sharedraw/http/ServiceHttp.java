@@ -111,7 +111,7 @@ public class ServiceHttp extends Service {
      *            </tr>
      *            </table>
      *            <br />
-     * @param delegate Method to call after response
+     * @param delegate Who to call for response
      */
     private void doRequest(final Message msg, int delegate) {
         Bundle data = msg.getData();
