@@ -190,7 +190,7 @@ public class SelectionBoard extends ServiceManager {
                     return false;
                 }
                 for (String name : dashboardNames) {
-                    if (name.contains(query)) {
+                    if (name.toLowerCase().contains(query.toLowerCase())) {
                         filterDashboard.add(name);
                     }
                 }
@@ -206,7 +206,7 @@ public class SelectionBoard extends ServiceManager {
                     return false;
                 }
                 for (String name : dashboardNames) {
-                    if (name.contains(newText)) {
+                    if (name.toLowerCase().contains(newText.toLowerCase())) {
                         filterDashboard.add(name);
                     }
                 }
