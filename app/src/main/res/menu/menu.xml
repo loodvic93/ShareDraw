@@ -2,8 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
         <item
+                android:id="@+id/action_search"
+                android:icon="@drawable/ic_search_white"
+                android:title="@string/search"
+                app:actionViewClass="android.support.v7.widget.SearchView"
+                app:showAsAction="ifRoom" />
+
+        <item
             android:id="@+id/add"
             android:icon="@drawable/add_new_board"
-            app:showAsAction="always"
+            app:showAsAction="ifRoom"
             android:title="@string/add_new_board"/>
 </menu>

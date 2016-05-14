@@ -7,7 +7,9 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -22,13 +24,12 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Random;
 
 import umlv.fr.sharedraw.drawer.CircularTextView;
@@ -36,8 +37,7 @@ import umlv.fr.sharedraw.http.ServiceHttp;
 
 public class SelectionBoard extends ServiceManager {
     private static final String[] COLOR = {"#F49AC2", "#CB99C9", "#C23B22", "#FFD1DC", "#DEA5A4", "#AEC6CF", "#77DD77", "#CFCFC4", "#B39EB5", "#FFB347", "#B19CD9", "#FF6961", "#03C03C", "#FDFD96", "#836953", "#779ECB", "#966FD6"};
-    private final ArrayList<String> listItem = new ArrayList<>();
-    private ArrayAdapter<String> arrayAdapter;
+    private final ArrayList<String> dashboardNames = new ArrayList<>();
     private static final int RESULT = 1;
     private boolean mIsBound;
 
@@ -52,7 +52,7 @@ public class SelectionBoard extends ServiceManager {
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                String title = listItem.get(position);
+                String title = dashboardNames.get(position).substring(7);
                 createAndLaunchDialogBox(title);
             }
         });
@@ -66,7 +66,7 @@ public class SelectionBoard extends ServiceManager {
 
     @Override
     protected void onResume() {
-        listItem.clear();
+        dashboardNames.clear();
         doBindService();
         super.onResume();
     }
@@ -129,7 +129,8 @@ public class SelectionBoard extends ServiceManager {
         }
     }
 
-    private void updateAndSetAdapter() {
+    @SuppressWarnings("all")
+    private void updateAndSetAdapter(List<String> items) {
         ListView lv = (ListView) findViewById(R.id.listView_board);
         assert lv != null;
 
@@ -142,18 +143,18 @@ public class SelectionBoard extends ServiceManager {
                         convertView = getLayoutInflater().inflate(R.layout.activity_selection_board_item_list_view, null);
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
-                    title.setText(getItem(position));
+                    title.setText(getItem(position).substring(7));
                     CircularTextView firstLetter = (CircularTextView)convertView.findViewById(R.id.firstLetter);
-                    firstLetter.setBackgroundColor(Color.parseColor(COLOR[new Random().nextInt(COLOR.length)]));
-                    firstLetter.setText(getItem(position).substring(0,1).toUpperCase());
+                    firstLetter.setBackgroundColor(Color.parseColor(getItem(position).substring(0, 7)));
+                    firstLetter.setText(getItem(position).substring(7,8).toUpperCase());
                     return convertView;
                 }
             };
             lv.setAdapter(adapter);
         }
-        arrayAdapter = (ArrayAdapter<String>) adapter;
+        ArrayAdapter<String> arrayAdapter = (ArrayAdapter<String>) adapter;
         arrayAdapter.clear();
-        arrayAdapter.addAll(listItem);
+        arrayAdapter.addAll(items);
     }
 
     private void resultToBoard(JSONArray json) {
@@ -161,15 +162,15 @@ public class SelectionBoard extends ServiceManager {
             for (int i = 0; i < json.length(); i++) {
                 String title = json.getString(i);
                 title = title.replaceAll("_", " ");
-                listItem.add(title);
+                dashboardNames.add(COLOR[new Random().nextInt(COLOR.length)] + title);
             }
-            Collections.sort(listItem, new Comparator<String>() {
+            Collections.sort(dashboardNames, new Comparator<String>() {
                 @Override
                 public int compare(String lhs, String rhs) {
                     return lhs.compareToIgnoreCase(rhs);
                 }
             });
-            updateAndSetAdapter();
+            updateAndSetAdapter(dashboardNames);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -178,6 +179,44 @@ public class SelectionBoard extends ServiceManager {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                List<String> filterDashboard = new ArrayList<>();
+                if (query.isEmpty()) {
+                    updateAndSetAdapter(dashboardNames);
+                    return false;
+                }
+                for (String name : dashboardNames) {
+                    if (name.contains(query)) {
+                        filterDashboard.add(name);
+                    }
+                }
+                updateAndSetAdapter(filterDashboard);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                List<String> filterDashboard = new ArrayList<>();
+                if (newText.isEmpty()) {
+                    updateAndSetAdapter(dashboardNames);
+                    return false;
+                }
+                for (String name : dashboardNames) {
+                    if (name.contains(newText)) {
+                        filterDashboard.add(name);
+                    }
+                }
+                updateAndSetAdapter(filterDashboard);
+                return false;
+            }
+        });
+
+
+
         return true;
     }
 
