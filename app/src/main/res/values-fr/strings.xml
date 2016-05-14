@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ShareDraw</string>
+    <string name="select_dashboard">Selection d\'un tableau</string>
+    <string name="add_new_board">Ajouter un nouveau tableau</string>
+    <string name="title">Nom du tableau</string>
+    <string name="username">Nom d\'utilisateur</string>
+    <string name="selection_board_new_title">Entrez les informations</string>
+    <string name="selection_board_new_dashboard_validate">Valider</string>
+    <string name="selection_board_new_dashboard_cancel">Annuler</string>
+</resources>

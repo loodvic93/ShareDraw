@@ -5,16 +5,16 @@
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/activity_horizontal_margin">
 
-    <TextView
+    <umlv.fr.sharedraw.drawer.CircularTextView
+        android:layout_height="wrap_content"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
         android:layout_weight="0.2"
-        android:textAppearance="?android:attr/textAppearanceLarge"
         android:gravity="center"
         android:id="@+id/firstLetter"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="50dp"
-        android:textStyle="bold" />
+        android:textColor="#FFF"
+        android:textSize="35dp"
+        android:textStyle="bold"
+        android:layout_margin="10dp" />
 
     <TextView
         android:layout_width="0dp"

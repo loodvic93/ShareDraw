@@ -3,6 +3,7 @@ package umlv.fr.sharedraw;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
@@ -28,10 +29,13 @@ import org.json.JSONException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Random;
 
+import umlv.fr.sharedraw.drawer.CircularTextView;
 import umlv.fr.sharedraw.http.ServiceHttp;
 
 public class SelectionBoard extends ServiceManager {
+    private static final String[] COLOR = {"#F49AC2", "#CB99C9", "#C23B22", "#FFD1DC", "#DEA5A4", "#AEC6CF", "#77DD77", "#CFCFC4", "#B39EB5", "#FFB347", "#B19CD9", "#FF6961", "#03C03C", "#FDFD96", "#836953", "#779ECB", "#966FD6"};
     private final ArrayList<String> listItem = new ArrayList<>();
     private ArrayAdapter<String> arrayAdapter;
     private static final int RESULT = 1;
@@ -40,10 +44,9 @@ public class SelectionBoard extends ServiceManager {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitle(getString(R.string.select_dashboard));
         setContentView(R.layout.activity_selection_board);
-
         doBindService();
-
         final ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -140,7 +143,8 @@ public class SelectionBoard extends ServiceManager {
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
                     title.setText(getItem(position));
-                    TextView firstLetter = (TextView)convertView.findViewById(R.id.firstLetter);
+                    CircularTextView firstLetter = (CircularTextView)convertView.findViewById(R.id.firstLetter);
+                    firstLetter.setBackgroundColor(Color.parseColor(COLOR[new Random().nextInt(COLOR.length)]));
                     firstLetter.setText(getItem(position).substring(0,1).toUpperCase());
                     return convertView;
                 }
@@ -195,9 +199,9 @@ public class SelectionBoard extends ServiceManager {
         LayoutInflater factory = LayoutInflater.from(this);
         final View dialogView = factory.inflate(R.layout.activity_selection_board_dialog_layout, null);
         builder.setView(dialogView);
-        builder.setTitle("Please write informations");
+        builder.setTitle(getString(R.string.selection_board_new_title));
         // Set up the buttons
-        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton(getString(R.string.selection_board_new_dashboard_validate), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 EditText title = (EditText) dialogView.findViewById(R.id.title);
@@ -206,7 +210,7 @@ public class SelectionBoard extends ServiceManager {
             }
         });
 
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(getString(R.string.selection_board_new_dashboard_cancel), new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
