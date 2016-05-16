@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.os.RemoteException;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.SearchView;
 import android.text.Editable;
@@ -37,7 +38,7 @@ import umlv.fr.sharedraw.http.ServiceHttp;
 
 public class SelectionBoard extends ServiceManager {
     private static final String[] COLOR = {"#F49AC2", "#CB99C9", "#C23B22", "#FFD1DC", "#DEA5A4", "#AEC6CF", "#77DD77", "#CFCFC4", "#B39EB5", "#FFB347", "#B19CD9", "#FF6961", "#03C03C", "#FDFD96", "#836953", "#779ECB", "#966FD6"};
-    private final ArrayList<String> dashboardNames = new ArrayList<>();
+    private final ArrayList<Dashboard> dashboards = new ArrayList<>();
     private static final int RESULT = 1;
     private boolean mIsBound;
 
@@ -52,8 +53,17 @@ public class SelectionBoard extends ServiceManager {
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                String title = dashboardNames.get(position).substring(7);
+                String title = dashboards.get(position).name;
                 createAndLaunchDialogBox(title);
+            }
+        });
+
+        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
+        assert swipeRefreshLayout != null;
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                doAfterBinding();
             }
         });
     }
@@ -66,7 +76,7 @@ public class SelectionBoard extends ServiceManager {
 
     @Override
     protected void onResume() {
-        dashboardNames.clear();
+        dashboards.clear();
         doBindService();
         super.onResume();
     }
@@ -88,6 +98,9 @@ public class SelectionBoard extends ServiceManager {
             Bundle data = msg.getData();
             String result = data.getString("response");
             if (result == null) return;
+            SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
+            assert swipeRefreshLayout != null;
+            swipeRefreshLayout.setRefreshing(false);
             resultToBoard(new JSONArray(result));
         } catch (JSONException e) {
             e.printStackTrace();
@@ -130,29 +143,29 @@ public class SelectionBoard extends ServiceManager {
     }
 
     @SuppressWarnings("all")
-    private void updateAndSetAdapter(List<String> items) {
+    private void updateAndSetAdapter(List<Dashboard> items) {
         ListView lv = (ListView) findViewById(R.id.listView_board);
         assert lv != null;
 
         ListAdapter adapter = lv.getAdapter();
         if (adapter == null) {
-            adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1) {
+            adapter = new ArrayAdapter<Dashboard>(this, android.R.layout.simple_list_item_1) {
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
                     if (convertView == null) {
                         convertView = getLayoutInflater().inflate(R.layout.activity_selection_board_item_list_view, null);
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
-                    title.setText(getItem(position).substring(7));
+                    title.setText(getItem(position).name);
                     CircularTextView firstLetter = (CircularTextView)convertView.findViewById(R.id.firstLetter);
-                    firstLetter.setBackgroundColor(Color.parseColor(getItem(position).substring(0, 7)));
-                    firstLetter.setText(getItem(position).substring(7,8).toUpperCase());
+                    firstLetter.setBackgroundColor(Color.parseColor(getItem(position).color));
+                    firstLetter.setText(getItem(position).name.substring(0,1).toUpperCase());
                     return convertView;
                 }
             };
             lv.setAdapter(adapter);
         }
-        ArrayAdapter<String> arrayAdapter = (ArrayAdapter<String>) adapter;
+        ArrayAdapter<Dashboard> arrayAdapter = (ArrayAdapter<Dashboard>) adapter;
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
     }
@@ -162,15 +175,18 @@ public class SelectionBoard extends ServiceManager {
             for (int i = 0; i < json.length(); i++) {
                 String title = json.getString(i);
                 title = title.replaceAll("_", " ");
-                dashboardNames.add(COLOR[new Random().nextInt(COLOR.length)] + title);
+                Dashboard dashboard = new Dashboard(title, COLOR[new Random().nextInt(COLOR.length)]);
+                if (!dashboards.contains(dashboard)) {
+                    dashboards.add(dashboard);
+                }
             }
-            Collections.sort(dashboardNames, new Comparator<String>() {
+            Collections.sort(dashboards, new Comparator<Dashboard>() {
                 @Override
-                public int compare(String lhs, String rhs) {
-                    return lhs.compareToIgnoreCase(rhs);
+                public int compare(Dashboard lhs, Dashboard rhs) {
+                    return lhs.name.compareToIgnoreCase(rhs.name);
                 }
             });
-            updateAndSetAdapter(dashboardNames);
+            updateAndSetAdapter(dashboards);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -184,14 +200,14 @@ public class SelectionBoard extends ServiceManager {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                List<String> filterDashboard = new ArrayList<>();
+                List<Dashboard> filterDashboard = new ArrayList<>();
                 if (query.isEmpty()) {
-                    updateAndSetAdapter(dashboardNames);
+                    updateAndSetAdapter(dashboards);
                     return false;
                 }
-                for (String name : dashboardNames) {
-                    if (name.toLowerCase().contains(query.toLowerCase())) {
-                        filterDashboard.add(name);
+                for (Dashboard dashboard : dashboards) {
+                    if (dashboard.name.toLowerCase().contains(query.toLowerCase())) {
+                        filterDashboard.add(dashboard);
                     }
                 }
                 updateAndSetAdapter(filterDashboard);
@@ -200,14 +216,14 @@ public class SelectionBoard extends ServiceManager {
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                List<String> filterDashboard = new ArrayList<>();
+                List<Dashboard> filterDashboard = new ArrayList<>();
                 if (newText.isEmpty()) {
-                    updateAndSetAdapter(dashboardNames);
+                    updateAndSetAdapter(dashboards);
                     return false;
                 }
-                for (String name : dashboardNames) {
-                    if (name.toLowerCase().contains(newText.toLowerCase())) {
-                        filterDashboard.add(name);
+                for (Dashboard dashboard : dashboards) {
+                    if (dashboard.name.toLowerCase().contains(newText.toLowerCase())) {
+                        filterDashboard.add(dashboard);
                     }
                 }
                 updateAndSetAdapter(filterDashboard);
@@ -231,6 +247,7 @@ public class SelectionBoard extends ServiceManager {
         }
     }
 
+    @SuppressWarnings("all")
     private void createAndLaunchDialogBox(String currantTitle) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -323,5 +340,31 @@ public class SelectionBoard extends ServiceManager {
         intent.putExtra("username", username);
         intent.putExtra("title", title);
         startActivityForResult(intent, RESULT);
+    }
+
+    private class Dashboard {
+        private final String name;
+        private final String color;
+
+        Dashboard(String name, String color) {
+            this.name = name;
+            this.color = color;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Dashboard dashboard = (Dashboard) o;
+
+            return name != null ? name.equals(dashboard.name) : dashboard.name == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            return name != null ? name.hashCode() : 0;
+        }
     }
 }
