@@ -18,7 +18,6 @@ public class Line implements Brush {
     @Override
     public void draw(Canvas canvas) {
         canvas.drawLine(x, y, x2, y2, paint);
-        canvas.save();
     }
 
     @Override

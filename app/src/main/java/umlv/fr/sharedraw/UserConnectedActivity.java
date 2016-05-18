@@ -10,11 +10,10 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class UserConnectedActivity extends Fragment implements NotifyService {
-    private List<String> connected = new ArrayList<>();
+    private List<String> connected;
 
     public UserConnectedActivity() {
 
@@ -65,13 +64,12 @@ public class UserConnectedActivity extends Fragment implements NotifyService {
         ArrayAdapter<String> arrayAdapter = (ArrayAdapter<String>) adapter;
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
+        arrayAdapter.setNotifyOnChange(true);
     }
 
     @Override
     public void notifyServiceConnected() {
-        if (connected.isEmpty()) {
-            connected = MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected();
-        }
+        connected = MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected();
         updateAndSetAdapter(connected);
     }
 }

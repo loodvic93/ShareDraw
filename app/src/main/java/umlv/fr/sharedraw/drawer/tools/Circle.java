@@ -19,7 +19,6 @@ public class Circle implements Brush {
     @Override
     public void draw(Canvas canvas) {
         canvas.drawCircle(x, y, radius, paint);
-        canvas.save();
     }
 
     @Override

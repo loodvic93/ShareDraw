@@ -171,14 +171,9 @@ public class CanvasView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (!brushes.isEmpty()) {
-            brushes.get(brushes.size() - 1).draw(canvas);
-            /*for (Brush b : brushes) {
-                System.out.println("BRUSH = " + b.getBrushType());
+            for (Brush b : brushes) {
                 b.draw(canvas);
             }
-            System.out.println(" ");
-            System.out.println("-----------------------");
-            System.out.println(" ");*/
         } else {
             canvas.drawColor(Color.WHITE);
         }
