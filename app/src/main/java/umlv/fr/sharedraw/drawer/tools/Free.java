@@ -23,6 +23,7 @@ public class Free implements Brush {
     public void draw(Canvas canvas) {
         path.lineTo(this.x, this.y);
         canvas.drawPath(path, paint);
+        canvas.save();
     }
 
     @Override

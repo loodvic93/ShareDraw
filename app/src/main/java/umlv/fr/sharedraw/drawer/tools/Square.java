@@ -27,6 +27,7 @@ public class Square implements Brush {
         } else {
             canvas.drawRect(x2, y2 - FAULT_TOLERANT, x, y - FAULT_TOLERANT, paint);
         }
+        canvas.save();
     }
 
     @Override

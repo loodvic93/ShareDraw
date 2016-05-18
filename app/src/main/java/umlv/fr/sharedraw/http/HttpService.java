@@ -70,12 +70,12 @@ public class HttpService extends Service {
             @Override
             public void run() {
                 int nextID = actions.size();
-                String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
+                String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(1));
                 if (response != null) {
                     actions.add(Proxy.createAction(response));
                 }
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.MILLISECONDS);
     }
 
     // API

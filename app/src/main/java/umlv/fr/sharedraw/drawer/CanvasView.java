@@ -132,6 +132,10 @@ public class CanvasView extends View {
         }
     }
 
+    public void addBrush(Brush brush) {
+
+    }
+
     private void startTouch(float x, float y) {
         switch (brush) {
             case CIRCLE:
@@ -167,9 +171,14 @@ public class CanvasView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         if (!brushes.isEmpty()) {
-            for (Brush b : brushes) {
+            brushes.get(brushes.size() - 1).draw(canvas);
+            /*for (Brush b : brushes) {
+                System.out.println("BRUSH = " + b.getBrushType());
                 b.draw(canvas);
             }
+            System.out.println(" ");
+            System.out.println("-----------------------");
+            System.out.println(" ");*/
         } else {
             canvas.drawColor(Color.WHITE);
         }
