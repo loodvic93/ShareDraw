@@ -11,18 +11,14 @@ public class Admin implements Action {
     private static final String CLASS_NAME = Admin.class.getCanonicalName();
     private String author;
     private String message;
-    private long timestamp;
     private boolean joining;
-    private int id;
 
     private Admin() { }
 
     static Admin createAdminAction(JSONObject jsonObject) {
         Admin admin = new Admin();
         try {
-            admin.id = jsonObject.getInt("id");
             admin.author = jsonObject.getString("author");
-            admin.timestamp = jsonObject.getLong("timestamp");
             admin.message = jsonObject.getJSONObject("message").toString();
             admin.joining = jsonObject.getJSONObject("message").getString("admin").equalsIgnoreCase("join");
         }  catch (JSONException e) {
@@ -39,16 +35,6 @@ public class Admin implements Action {
     @Override
     public String getMessage() {
         return message;
-    }
-
-    @Override
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    @Override
-    public int getIdMessage() {
-        return id;
     }
 
     public boolean isJoining() {
@@ -77,9 +63,7 @@ public class Admin implements Action {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(author);
         dest.writeString(message);
-        dest.writeLong(timestamp);
         dest.writeByte((byte) (joining ? 1 : 0));
-        dest.writeInt(id);
     }
 
     private Admin(Parcel in) {
@@ -89,8 +73,6 @@ public class Admin implements Action {
     private void getFromParcel(Parcel in) {
         author = in.readString();
         message = in.readString();
-        timestamp = in.readLong();
         joining = in.readByte() != 0;
-        id = in.readInt();
     }
 }

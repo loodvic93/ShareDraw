@@ -10,6 +10,21 @@ public class Square implements Brush {
     private float x2;
     private float y2;
 
+    public Square(float x, float y, float x2, float y2, int color, boolean stroke) {
+        this.x = x;
+        this.y = y;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.paint = new Paint();
+        this.paint.setStrokeWidth(STROKE_WIDTH);
+        if (stroke) {
+            this.paint.setStyle(Paint.Style.STROKE);
+        } else {
+            this.paint.setStyle(Paint.Style.FILL);
+        }
+        this.paint.setColor(color);
+    }
+
     public Square() {
         this.paint = new Paint();
         this.paint.setStyle(Paint.Style.STROKE);
@@ -49,7 +64,32 @@ public class Square implements Brush {
     }
 
     @Override
-    public BrushType getBrushType() {
-        return BrushType.SQUARE;
+    public void setStroke(boolean stroke) {
+        if (stroke) {
+            this.paint.setStyle(Paint.Style.STROKE);
+        } else {
+            this.paint.setStyle(Paint.Style.FILL);
+        }
+    }
+
+    @Override
+    public String getJson() {
+        StringBuilder json = new StringBuilder();
+        json.append("{")
+                .append("\"draw\": {")
+                .append("\"shape\": \"square\",")
+                .append("\"x\":").append(x).append(",")
+                .append("\"y\":").append(y).append(",")
+                .append("\"x2\":").append(x2).append(",")
+                .append("\"y2\":")
+                .append(y2)
+                .append("},")
+                .append("\"options\": {")
+                .append("\"color\":").append(paint.getColor()).append(",")
+                .append("\"stroke\":")
+                .append((paint.getStyle() == Paint.Style.STROKE))
+                .append("}")
+                .append("}");
+        return json.toString();
     }
 }

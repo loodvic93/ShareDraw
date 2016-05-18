@@ -8,18 +8,17 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Environment;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import umlv.fr.sharedraw.MainFragmentActivity;
+import umlv.fr.sharedraw.NotifyDraw;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Circle;
 import umlv.fr.sharedraw.drawer.tools.Free;
@@ -35,14 +34,16 @@ import umlv.fr.sharedraw.drawer.tools.Square;
 public class CanvasView extends View {
     private final List<Brush> brushes = new ArrayList<>();
     private Brush.BrushType brush = Brush.BrushType.FREE;
+    private NotifyDraw delegate = null;
     private final Context mContext;
+    private boolean stroke = true;
     private final Paint mPaint;
     private final Path mPath;
+    private Brush brushUsed;
     private Bitmap mBitmap;
     private Canvas mCanvas;
-    private Brush brushUsed;
-    public int width;
-    public int height;
+
+
 
 
     public CanvasView(Context context) {
@@ -96,11 +97,8 @@ public class CanvasView extends View {
         this.brush = brush;
     }
 
-    public void cancel() {
-        if (!brushes.isEmpty()) {
-            brushes.remove(brushes.size() - 1);
-            invalidate();
-        }
+    public void stroke() {
+        stroke = !stroke;
     }
 
     public void clearCanvas() {
@@ -136,6 +134,10 @@ public class CanvasView extends View {
 
     }
 
+    public void delegate(NotifyDraw delegate) {
+        this.delegate = delegate;
+    }
+
     private void startTouch(float x, float y) {
         switch (brush) {
             case CIRCLE:
@@ -154,6 +156,7 @@ public class CanvasView extends View {
                 brushUsed = new Free();
         }
         brushUsed.changeColor(mPaint.getColor());
+        brushUsed.setStroke(stroke);
         brushUsed.start(x, y);
         brushes.add(brushUsed);
     }
@@ -164,8 +167,10 @@ public class CanvasView extends View {
 
     private void upTouch() {
         brushUsed.draw(mCanvas);
+        if (delegate != null) {
+            delegate.notifyOnDraw(brushUsed);
+        }
     }
-
 
     // override onDraw
     @Override

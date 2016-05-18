@@ -17,7 +17,7 @@ import umlv.fr.sharedraw.drawer.CanvasView;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 
 
-public class DashboardActivity extends Fragment implements NotifyService {
+public class DashboardActivity extends Fragment implements NotifyService, NotifyDraw {
     private ArrayList<Integer> actionForCurrentUser = new ArrayList<>();
     private CanvasView drawer;
     private String mUsername;
@@ -53,6 +53,7 @@ public class DashboardActivity extends Fragment implements NotifyService {
         super.onViewCreated(view, savedInstanceState);
 
         drawer = (CanvasView) getActivity().findViewById(R.id.canvas);
+        drawer.delegate(this);
 
 
         getActivity().findViewById(R.id.palette).setOnTouchListener(new View.OnTouchListener() {
@@ -86,11 +87,11 @@ public class DashboardActivity extends Fragment implements NotifyService {
         });
 
 
-        ImageButton cancel = (ImageButton)getActivity().findViewById(R.id.imageButton_back);
-        cancel.setOnClickListener(new View.OnClickListener() {
+        ImageButton stroke = (ImageButton)getActivity().findViewById(R.id.imageButton_stroke);
+        stroke.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.cancel();
+                drawer.stroke();
             }
         });
 
@@ -264,5 +265,11 @@ public class DashboardActivity extends Fragment implements NotifyService {
     @Override
     public void notifyServiceConnected() {
 
+    }
+
+    @Override
+    public void notifyOnDraw(Brush brush) {
+        System.out.println("JSON = " + brush.getJson());
+        MainFragmentActivity.HTTP_SERVICE.postMessage(getString(R.string.server), mTitle, "&author=" + mUsername + "&message=" + brush.getJson());
     }
 }

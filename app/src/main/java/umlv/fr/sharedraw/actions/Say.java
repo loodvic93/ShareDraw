@@ -3,38 +3,24 @@ package umlv.fr.sharedraw.actions;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
-import org.json.JSONArray;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class Say implements Action {
     private static final String CLASS_NAME = Say.class.getCanonicalName();
     private String author;
     private String message;
     private long timestamp;
-    private int id;
-    private List<String> dest;
 
     private Say() { }
 
     static Say createSayAction(JSONObject jsonObject) {
         Say say = new Say();
         try {
-            say.id = jsonObject.getInt("id");
             say.author = jsonObject.getString("author");
             say.timestamp = jsonObject.getLong("timestamp");
             say.message = jsonObject.getJSONObject("message").toString();
-
-            say.dest = new ArrayList<>();
-            JSONArray destination = jsonObject.getJSONObject("message").optJSONArray("destination");
-            if (destination != null) {
-                for (int i = 0; i < destination.length(); i++) {
-                    say.dest.add(destination.getString(i));
-                }
-            }
         }  catch (JSONException e) {
             Log.e(CLASS_NAME, "Error while read JSON message");
         }
@@ -52,18 +38,14 @@ public class Say implements Action {
         return message;
     }
 
-    @Override
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    @Override
-    public int getIdMessage() {
-        return id;
-    }
-
-    public List<String> getDestinations() {
-        return Collections.unmodifiableList(dest);
+    public String getContent() {
+        try {
+            JSONObject say = new JSONObject(message);
+            return say.getString("content");
+        } catch (JSONException e) {
+            Log.e(CLASS_NAME, "Cannot read JSON");
+            return null;
+        }
     }
 
     @SuppressWarnings("rawtypes")
@@ -88,8 +70,6 @@ public class Say implements Action {
         dest.writeString(author);
         dest.writeString(message);
         dest.writeLong(timestamp);
-        dest.writeInt(id);
-        dest.writeStringList(this.dest);
     }
 
     private Say(Parcel in) {
@@ -100,8 +80,5 @@ public class Say implements Action {
         author = in.readString();
         message = in.readString();
         timestamp = in.readLong();
-        id = in.readInt();
-        dest = new ArrayList<>();
-        in.readList(dest, String.class.getClassLoader());
     }
 }

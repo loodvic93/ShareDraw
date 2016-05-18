@@ -11,5 +11,6 @@ public interface Brush {
     void changeColor(int color);
     void start(float x, float y);
     void moveTo(float x, float y);
-    BrushType getBrushType();
+    void setStroke(boolean stroke);
+    String getJson();
 }

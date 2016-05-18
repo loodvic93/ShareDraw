@@ -18,7 +18,9 @@ import java.util.concurrent.TimeUnit;
 
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
+import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.actions.Proxy;
+import umlv.fr.sharedraw.actions.Say;
 
 @SuppressWarnings("ALL")
 public class HttpService extends Service {
@@ -26,9 +28,11 @@ public class HttpService extends Service {
     private final ExecutorService executor = Executors.newFixedThreadPool(5);
     private final List<Action> actions = new ArrayList<>();
     private final HttpRequest request = new HttpRequest();
+    private final List<Admin> users = new ArrayList<>();
+    private final List<Draw> draws = new ArrayList<>();
+    private final List<Say> says = new ArrayList<>();
     private String mDashboard;
     private String mServer;
-
 
     public class HttpBinder extends Binder {
         public HttpService getService() {

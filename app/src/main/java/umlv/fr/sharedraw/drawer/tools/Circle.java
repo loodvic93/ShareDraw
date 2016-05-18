@@ -9,6 +9,20 @@ public class Circle implements Brush {
     private float x;
     private float y;
 
+    public Circle(float x, float y, float radius, int color, boolean stroke) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+        this.paint = new Paint();
+        this.paint.setStrokeWidth(STROKE_WIDTH);
+        if (stroke) {
+            this.paint.setStyle(Paint.Style.STROKE);
+        } else {
+            this.paint.setStyle(Paint.Style.FILL);
+        }
+        this.paint.setColor(color);
+    }
+
     public Circle() {
         this.radius = 0;
         this.paint = new Paint();
@@ -38,8 +52,37 @@ public class Circle implements Brush {
     }
 
     @Override
-    public BrushType getBrushType() {
-        return BrushType.CIRCLE;
+    public void setStroke(boolean stroke) {
+        if (stroke) {
+            this.paint.setStyle(Paint.Style.STROKE);
+        } else {
+            this.paint.setStyle(Paint.Style.FILL);
+        }
+    }
+
+    @Override
+    @SuppressWarnings("all")
+    public String getJson() {
+        StringBuilder json = new StringBuilder();
+        json.append("{")
+                .append("\"draw\": {")
+                .append("\"shape\": \"circle\",")
+                .append("\"center\": [")
+                .append(x)
+                .append(", ")
+                .append(y)
+                .append("],")
+                .append("\"radius\": ")
+                .append(radius)
+                .append("},")
+                .append("\"options\": {")
+                .append("\"color\":")
+                .append(paint.getColor() + ",")
+                .append("\"stroke\":")
+                .append((paint.getStyle() == Paint.Style.STROKE))
+                .append("}")
+                .append("}");
+        return json.toString();
     }
 
     private float radiusCalc(float x, float y) {
