@@ -1,13 +1,6 @@
 package umlv.fr.sharedraw.http;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
-import android.os.RemoteException;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -19,33 +12,19 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  * @author Ludovic
  * @version 1.0
  *          This class permit to do HTTP Request to a web service
  */
-public class ServiceHttp extends Service {
-    private final static String CLASS_NAME = ServiceHttp.class.getCanonicalName();
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+public class HttpRequest {
+    private final static String CLASS_NAME = HttpRequest.class.getCanonicalName();
     private final Map<String, Method> methods = new HashMap<>();
-    private final ArrayList<Messenger> mClients = new ArrayList<>();
-    public static final int MSG_REGISTER_CLIENT = 1;
-    public static final int MSG_UNREGISTER_CLIENT = 2;
-    public static final int MSG_GET_LIST_DASHBOARD = 3;
-    public static final int MSG_GET_MESSAGE = 4;
-    public static final int MSG_POST_MESSAGE = 5;
-
-    public ServiceHttp() {
-        for (Method m : ServiceHttp.class.getDeclaredMethods()) {
+    public HttpRequest() {
+        for (Method m : HttpRequest.class.getDeclaredMethods()) {
             if (m.isAnnotationPresent(HttpRequestProperty.class)) {
                 String method = m.getAnnotation(HttpRequestProperty.class).value();
                 methods.put(method, m);
@@ -53,38 +32,10 @@ public class ServiceHttp extends Service {
         }
     }
 
-    final Messenger myMessenger = new Messenger(new HttpHandler());
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return myMessenger.getBinder();
-    }
-
-    class HttpHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_REGISTER_CLIENT:
-                    mClients.add(msg.replyTo);
-                    break;
-                case MSG_UNREGISTER_CLIENT:
-                    mClients.remove(msg.replyTo);
-                    break;
-                case MSG_GET_LIST_DASHBOARD:
-                case MSG_GET_MESSAGE:
-                case MSG_POST_MESSAGE:
-                    doRequest(msg, msg.what);
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    }
-
     /**
      * Execute the HTTP Request
      *
-     * @param msg must be not null and must have this format: Method to call, parameters to give to the method
+     * @param params must be not null and must have this format: Method to call, parameters to give to the method
      *            <br /><br />
      *            Methods list to give in first argument to executor:<br />
      *            <table>
@@ -111,43 +62,17 @@ public class ServiceHttp extends Service {
      *            </tr>
      *            </table>
      *            <br />
-     * @param delegate Who to call for response
      */
-    private void doRequest(final Message msg, int delegate) {
-        Bundle data = msg.getData();
-        final String[] params = data.getStringArray("params");
-        if (params == null) return;
-        final Method m = methods.get(params[0]);
-        if (m == null) return;
-        sendResponseToClients(execute(m, params), msg.arg1, delegate);
+    public String request(String... params) {
+        Method m = methods.get(params[0]);
+        return execute(m, params);
     }
 
     private String execute(final Method m, final String[] params) {
         try {
-            Future<String> stringFuture = executor.submit(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return (String) m.invoke(null, new Object[]{params});
-                }
-            });
-            return stringFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            Log.e(CLASS_NAME, "Request interrupted");
+            return (String) m.invoke(null, new Object[]{params});
+        } catch (Exception e) {
             return null;
-        }
-    }
-
-    private void sendResponseToClients(String resp, int mValue, int delegate) {
-        for (int i = mClients.size() - 1; i >= 0; i--) {
-            try {
-                Message response = Message.obtain(null, delegate, mValue, 0);
-                Bundle bundle = new Bundle();
-                bundle.putString("response", resp);
-                response.setData(bundle);
-                mClients.get(i).send(response);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
         }
     }
 

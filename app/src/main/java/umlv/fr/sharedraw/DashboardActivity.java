@@ -1,214 +1,268 @@
 package umlv.fr.sharedraw;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Message;
-import android.os.RemoteException;
-import android.util.Log;
-import org.json.JSONException;
-import org.json.JSONObject;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+
 import java.util.ArrayList;
-import java.util.HashMap;
-import umlv.fr.sharedraw.actions.Action;
-import umlv.fr.sharedraw.actions.Admin;
-import umlv.fr.sharedraw.actions.Proxy;
-import umlv.fr.sharedraw.http.ServiceHttp;
+
+import umlv.fr.sharedraw.drawer.CanvasView;
+import umlv.fr.sharedraw.drawer.tools.Brush;
 
 
-public class DashboardActivity extends ServiceManager {
-    private static final String CLASS_NAME = DashboardActivity.class.getCanonicalName();
-    private static final String TIMEOUT = "1";
-    private boolean mIsBound;
-    private ArrayList<String> connectedUser = new ArrayList<>();
-    private ArrayList<Action> actions = new ArrayList<>();
+public class DashboardActivity extends Fragment implements NotifyService {
     private ArrayList<Integer> actionForCurrentUser = new ArrayList<>();
-    private HashMap<String, String> messagesReceived = new HashMap<>();
-    private int currentAction = 0;
-    private boolean dashboardIsCompleteInit = false;
-    private String username;
-    private String title;
+    private CanvasView drawer;
+    private String mUsername;
+    private String mTitle;
 
+
+    public DashboardActivity() {
+
+    }
+
+    public static DashboardActivity newInstance(String title, String username) {
+        DashboardActivity dashboardFragment = new DashboardActivity();
+        Bundle args = new Bundle();
+        args.putString("title", title);
+        args.putString("username", username);
+        dashboardFragment.setArguments(args);
+        return dashboardFragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        doBindService();
         initVariable(savedInstanceState);
-        setContentView(R.layout.activity_dashboard);
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.activity_dashboard, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        drawer = (CanvasView) getActivity().findViewById(R.id.canvas);
+
+
+        getActivity().findViewById(R.id.palette).setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent event)
+            {
+                FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
+                if (view.getId() != R.id.palette) return false;
+
+                switch (event.getAction())
+                {
+                    case MotionEvent.ACTION_MOVE:
+                        params.topMargin = (int) event.getRawY() - view.getHeight();
+                        params.leftMargin = (int) event.getRawX() - (view.getWidth() / 2);
+                        view.setLayoutParams(params);
+                        break;
+
+                    case MotionEvent.ACTION_UP:
+                        params.topMargin = (int) event.getRawY() - view.getHeight();
+                        params.leftMargin = (int) event.getRawX() - (view.getWidth() / 2);
+                        view.setLayoutParams(params);
+                        break;
+
+                    case MotionEvent.ACTION_DOWN:
+                        view.setLayoutParams(params);
+                        break;
+                }
+
+                return true;
+            }
+        });
+
+
+        ImageButton cancel = (ImageButton)getActivity().findViewById(R.id.imageButton_back);
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.cancel();
+            }
+        });
+
+        ImageButton save = (ImageButton)getActivity().findViewById(R.id.imageButton_save);
+        save.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.save();
+            }
+        });
+
+        ImageButton clean = (ImageButton)getActivity().findViewById(R.id.imageButton_clear);
+        clean.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.clearCanvas();
+            }
+        });
+
+        ImageButton free = (ImageButton)getActivity().findViewById(R.id.imageButton_line);
+        free.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeBrush(Brush.BrushType.FREE);
+            }
+        });
+
+        ImageButton square = (ImageButton)getActivity().findViewById(R.id.imageButton_square);
+        square.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeBrush(Brush.BrushType.SQUARE);
+            }
+        });
+
+        ImageButton circle = (ImageButton)getActivity().findViewById(R.id.imageButton_circle);
+        circle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeBrush(Brush.BrushType.CIRCLE);
+            }
+        });
+
+        ImageButton fixedLine = (ImageButton)getActivity().findViewById(R.id.fixedline);
+        fixedLine.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeBrush(Brush.BrushType.LINE);
+            }
+        });
+
+        final ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
+        black.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.BLACK);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
+        white.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.WHITE);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
+        red.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.RED);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
+        green.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.GREEN);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
+        blue.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.BLUE);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        yellow.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawer.changeColor(Color.YELLOW);
+                hideAllColorButton();
+            }
+        });
+
+        ImageButton palette = (ImageButton)getActivity().findViewById(R.id.paletteChoose);
+        palette.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (black.getVisibility() == View.GONE) {
+                    showAllColorButton();
+                } else {
+                    hideAllColorButton();
+                }
+            }
+        });
+    }
+
+    private void hideAllColorButton() {
+        ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
+        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
+        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
+        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
+        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
+        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        black.setVisibility(View.GONE);
+        white.setVisibility(View.GONE);
+        red.setVisibility(View.GONE);
+        green.setVisibility(View.GONE);
+        blue.setVisibility(View.GONE);
+        yellow.setVisibility(View.GONE);
+    }
+
+    private void showAllColorButton() {
+        ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
+        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
+        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
+        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
+        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
+        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        black.setVisibility(View.VISIBLE);
+        white.setVisibility(View.VISIBLE);
+        red.setVisibility(View.VISIBLE);
+        green.setVisibility(View.VISIBLE);
+        blue.setVisibility(View.VISIBLE);
+        yellow.setVisibility(View.VISIBLE);
+    }
+
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putString("username", username);
-        outState.putString("title", title);
-        outState.putStringArrayList("connectedUser", connectedUser);
-        outState.putParcelableArrayList("actions", actions);
+        outState.putString("username", mUsername);
+        outState.putString("title", mTitle);
         outState.putIntegerArrayList("actionForCurrentUser", actionForCurrentUser);
-        outState.putSerializable("messagesReceived", messagesReceived);
-        outState.putInt("currentAction", currentAction);
-    }
-
-    @Override
-    protected void onPause() {
-        signalToQuitDashboard();
-        doUnbindService();
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        doUnbindService();
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        doBindService();
-        super.onResume();
-    }
-
-    @Override
-    protected void doBindService() {
-
-        bindService(new Intent(DashboardActivity.this, ServiceHttp.class), mConnection, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-    }
-
-    @Override
-    protected void doUnbindService() {
-        if (mIsBound) {
-            if (mService != null) {
-                try {
-                    Message msg = Message.obtain(null, ServiceHttp.MSG_UNREGISTER_CLIENT);
-                    msg.replyTo = mMessenger;
-                    mService.send(msg);
-                } catch (RemoteException ignored) {
-
-                }
-            }
-            unbindService(mConnection);
-            mIsBound = false;
-        }
-    }
-
-    @Override
-    protected void onServiceStarted() {
-        if (actions.isEmpty()) {
-            signalToJoinDashboard();
-            try {
-                getPreviousActionsFromServer(0);
-            } catch (RemoteException e) {
-                Log.e(CLASS_NAME, "Cannot get previous actions from the server for this dashboard");
-            }
-        }
-    }
-
-    @Override
-    protected void onMsgPostMsg(Message msg) {
-        Bundle data = msg.getData();
-        String result = data.getString("response");
-        if (result == null) return;
-        try {
-            JSONObject jsonObject = new JSONObject(result);
-            actionForCurrentUser.add(jsonObject.getInt("id"));
-        } catch (JSONException e) {
-            Log.e(CLASS_NAME, "An error has happen when " + username + " post a message to a server");
-        }
-    }
-
-    @Override
-    protected void onMsgGetMsg(Message msg) {
-        Bundle data = msg.getData();
-        String result = data.getString("response");
-        if (!dashboardIsCompleteInit) {
-            try {
-                initDashboard(result);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-
-        // TODO Case if it's not an init
-    }
-
-    @Override
-    public void onBackPressed() {
-        setResult(Activity.RESULT_OK);
-        finish();
-    }
-
-    private void initDashboard(String result) throws RemoteException {
-        if (result == null) {
-            dashboardIsCompleteInit = true;
-            return;
-        }
-        Action action = Proxy.createAction(result);
-        if (action != null) {
-            if (!actionForCurrentUser.contains(action.getIdMessage())) {
-                actions.add(action);
-                if (action instanceof Admin) {
-                    Admin adminAction = (Admin) action;
-                    if (adminAction.isJoining()) {
-                        connectedUser.add(action.getAuthor());
-                    } else {
-                        connectedUser.remove(action.getAuthor());
-                    }
-                }
-            }
-            getPreviousActionsFromServer(action.getIdMessage() + 1);
-        }
-    }
-
-    private void getPreviousActionsFromServer(int id) throws RemoteException {
-        Message msg = Message.obtain(null, ServiceHttp.MSG_GET_MESSAGE, this.hashCode(), 0);
-        Bundle bundle = new Bundle();
-        bundle.putStringArray("params", new String[]{"getMessage", getString(R.string.server), title, Integer.toString(id), TIMEOUT});
-        msg.setData(bundle);
-        mService.send(msg);
-    }
-
-    private void signalToJoinDashboard() {
-        try {
-            Message msg = Message.obtain(null, ServiceHttp.MSG_POST_MESSAGE, this.hashCode(), 0);
-            Bundle bundle = new Bundle();
-            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"admin\": \"join\"}"});
-            msg.setData(bundle);
-            mService.send(msg);
-        } catch (RemoteException e) {
-            Log.e(CLASS_NAME, "There is a remote exception");
-        }
-    }
-
-    private void signalToQuitDashboard() {
-        try {
-            Message msg = Message.obtain(null, ServiceHttp.MSG_POST_MESSAGE, this.hashCode(), 0);
-            Bundle bundle = new Bundle();
-            bundle.putStringArray("params", new String[]{"postMessage", getString(R.string.server), title, "&author=" + username + "&message={\"admin\": \"leave\"}"});
-            msg.setData(bundle);
-            mService.send(msg);
-        } catch (RemoteException e) {
-            Log.e(CLASS_NAME, "There is a remote exception");
-        }
     }
 
     @SuppressWarnings("all")
     private void initVariable(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            username = savedInstanceState.getString("username");
-            title = savedInstanceState.getString("title");
-            connectedUser = savedInstanceState.getStringArrayList("connectedUser");
-            actions = savedInstanceState.getParcelableArrayList("actions");
-            currentAction = savedInstanceState.getInt("currentAction");
+            mUsername = savedInstanceState.getString("username");
+            mTitle = savedInstanceState.getString("title");
             actionForCurrentUser = savedInstanceState.getIntegerArrayList("actionForCurrentUser");
-            messagesReceived = (HashMap<String, String>) savedInstanceState.getSerializable("messagesReceived");
         } else {
-            Intent intent = getIntent();
-            username = intent.getStringExtra("username");
-            title = intent.getStringExtra("title");
+            Bundle bundle = getArguments();
+            mUsername = bundle.getString("username");
+            mTitle = bundle.getString("title");
         }
-        setTitle(title.replaceAll("_", " "));
+    }
+
+    @Override
+    public void notifyServiceConnected() {
+
     }
 }

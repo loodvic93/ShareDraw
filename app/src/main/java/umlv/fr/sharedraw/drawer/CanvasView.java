@@ -6,87 +6,175 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.os.Environment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import umlv.fr.sharedraw.drawer.tools.Brush;
+import umlv.fr.sharedraw.drawer.tools.Circle;
+import umlv.fr.sharedraw.drawer.tools.Free;
+import umlv.fr.sharedraw.drawer.tools.Line;
+import umlv.fr.sharedraw.drawer.tools.Square;
 
 /**
  * Permit to draw on screen
+ *
  * @author Olivier
  * @version 1.0
  */
 public class CanvasView extends View {
-    public int width;
-    public int height;
+    private final List<Brush> brushes = new ArrayList<>();
+    private Brush.BrushType brush = Brush.BrushType.FREE;
+    private final Context mContext;
+    private final Paint mPaint;
+    private final Path mPath;
     private Bitmap mBitmap;
     private Canvas mCanvas;
-    private Path mPath;
-    Context context;
-    private Paint mPaint;
-    private float mX, mY;
-    private static final float TOLERANCE = 5;
+    private Brush brushUsed;
+    public int width;
+    public int height;
 
-    public CanvasView(Context c, AttributeSet attrs) {
-        super(c, attrs);
-        context = c;
 
-        // we set a new Path
+    public CanvasView(Context context) {
+        super(context);
+        this.mContext = context;
         mPath = new Path();
-
-        // and we set a new Paint with the desired attributes
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setColor(Color.BLACK);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
-        mPaint.setStrokeWidth(4f);
+        mPaint.setStrokeWidth(Brush.STROKE_WIDTH);
     }
 
-    // override onSizeChanged
-    @Override
-    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        super.onSizeChanged(w, h, oldw, oldh);
+    public CanvasView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        this.mContext = context;
+        mPath = new Path();
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setColor(Color.BLACK);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeWidth(Brush.STROKE_WIDTH);
+    }
 
-        // your Canvas will draw onto the defined Bitmap
+    public CanvasView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        this.mContext = context;
+        mPath = new Path();
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setColor(Color.BLACK);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeWidth(Brush.STROKE_WIDTH);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int old_width, int old_height) {
+        super.onSizeChanged(w, h, old_width, old_height);
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
     }
 
-    // override onDraw
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        // draw the mPath with the mPaint on the canvas when onDraw
-        canvas.drawPath(mPath, mPaint);
+    public void changeColor(int color) {
+        mPaint.setColor(color);
     }
 
-    // when ACTION_DOWN start touch according to the x,y values
-    private void startTouch(float x, float y) {
-        mPath.moveTo(x, y);
-        mX = x;
-        mY = y;
+    public void changeBrush(Brush.BrushType brush) {
+        this.brush = brush;
     }
 
-    // when ACTION_MOVE move touch according to the x,y values
-    private void moveTouch(float x, float y) {
-        float dx = Math.abs(x - mX);
-        float dy = Math.abs(y - mY);
-        if (dx >= TOLERANCE || dy >= TOLERANCE) {
-            mPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
-            mX = x;
-            mY = y;
+    public void cancel() {
+        if (!brushes.isEmpty()) {
+            brushes.remove(brushes.size() - 1);
+            invalidate();
         }
     }
 
     public void clearCanvas() {
         mPath.reset();
+        brushes.clear();
         invalidate();
     }
 
-    // when ACTION_UP stop touch
-    private void upTouch() {
-        mPath.lineTo(mX, mY);
+    public void save() {
+        View content = this;
+        content.setDrawingCacheEnabled(true);
+        content.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        Bitmap bitmap = content.getDrawingCache();
+        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
+        System.out.println("PATH = " + path);
+        path = Environment.getDataDirectory().getAbsolutePath();
+        File file = new File(path+"/board.png");
+        FileOutputStream ostream;
+        try {
+            file.createNewFile();
+            ostream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
+            ostream.flush();
+            ostream.close();
+            Toast.makeText(mContext, "image saved", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(mContext, "error", Toast.LENGTH_LONG).show();
+        }
     }
+
+    private void startTouch(float x, float y) {
+        switch (brush) {
+            case CIRCLE:
+                brushUsed = new Circle();
+                break;
+            case FREE:
+                brushUsed = new Free();
+                break;
+            case LINE:
+                brushUsed = new Line();
+                break;
+            case SQUARE:
+                brushUsed = new Square();
+                break;
+            default:
+                brushUsed = new Free();
+        }
+        brushUsed.changeColor(mPaint.getColor());
+        brushUsed.start(x, y);
+        brushes.add(brushUsed);
+    }
+
+    private void moveTouch(float x, float y) {
+        brushUsed.moveTo(x, y);
+    }
+
+    private void upTouch() {
+        brushUsed.draw(mCanvas);
+    }
+
+
+    // override onDraw
+    @Override
+    protected void onDraw(Canvas canvas) {
+        if (!brushes.isEmpty()) {
+            for (Brush b : brushes) {
+                b.draw(canvas);
+            }
+        } else {
+            canvas.drawColor(Color.WHITE);
+        }
+    }
+
 
     //override the onTouchEvent
     @Override

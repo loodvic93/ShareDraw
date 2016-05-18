@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="umlv.fr.sharedraw">
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
@@ -10,6 +12,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
+        android:largeHeap="true"
         android:theme="@style/AppTheme">
         <activity
             android:name=".SelectionBoard"
@@ -20,21 +23,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DashboardActivity" />
-
-        <service
-            android:name=".http.ServiceHttp"
-            android:process=":processServiceHttp">
-            <intent-filter>
-                <action android:name="umlv.fr.sharedraw.http.ServiceHttp" />
-            </intent-filter>
-        </service>
-
         <activity
-            android:name=".MainActivity"
-            android:label="@string/title_activity_main"
+            android:name=".MainFragmentActivity"
+            android:label="@string/title_activity_main_fragment"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".UserConnectedActivity"></activity>
+
+        <service android:name=".http.HttpService" />
+
+        <activity android:name=".MessageActivity"></activity>
     </application>
 
 </manifest>

@@ -1,19 +1,23 @@
 package umlv.fr.sharedraw;
 
+import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Message;
-import android.os.RemoteException;
+import android.os.IBinder;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,8 +29,7 @@ import android.widget.EditText;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import org.json.JSONArray;
-import org.json.JSONException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,20 +37,20 @@ import java.util.List;
 import java.util.Random;
 
 import umlv.fr.sharedraw.drawer.CircularTextView;
-import umlv.fr.sharedraw.http.ServiceHttp;
+import umlv.fr.sharedraw.http.HttpService;
+import umlv.fr.sharedraw.http.HttpService.HttpBinder;
 
-public class SelectionBoard extends ServiceManager {
+public class SelectionBoard extends AppCompatActivity {
     private static final String[] COLOR = {"#F49AC2", "#CB99C9", "#C23B22", "#FFD1DC", "#DEA5A4", "#AEC6CF", "#77DD77", "#CFCFC4", "#B39EB5", "#FFB347", "#B19CD9", "#FF6961", "#03C03C", "#FDFD96", "#836953", "#779ECB", "#966FD6"};
     private final ArrayList<Dashboard> dashboards = new ArrayList<>();
-    private static final int RESULT = 1;
-    private boolean mIsBound;
+    private HttpService httpService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle(getString(R.string.select_dashboard));
+
         setContentView(R.layout.activity_selection_board);
-        doBindService();
         final ListView listViewBoard = (ListView) findViewById(R.id.listView_board);
         assert listViewBoard != null;
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -58,89 +61,68 @@ public class SelectionBoard extends ServiceManager {
             }
         });
 
-        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
+        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
         assert swipeRefreshLayout != null;
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                doAfterBinding();
+                getListOfDashboard();
             }
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        doUnbindService();
-        super.onDestroy();
-    }
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            HttpBinder binder = (HttpBinder) service;
+            httpService = binder.getService();
+            getListOfDashboard();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            httpService = null;
+        }
+    };
 
     @Override
     protected void onResume() {
-        dashboards.clear();
-        doBindService();
+        Intent intent = new Intent(this, HttpService.class);
+        bindService(intent, connection, Context.BIND_AUTO_CREATE);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        doUnbindService();
+        unbindService(connection);
         super.onPause();
     }
 
-    @Override
-    protected void onServiceStarted() {
-        doAfterBinding();
+    private void getListOfDashboard() {
+        List<String> names = httpService.getListOfDashboard(getString(R.string.server));
+        SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
+        assert swipeRefreshLayout != null;
+        swipeRefreshLayout.setRefreshing(false);
+        resultToBoard(names);
     }
 
-    @Override
-    protected void onMsgGetListDashboard(Message msg) {
-        try {
-            Bundle data = msg.getData();
-            String result = data.getString("response");
-            if (result == null) return;
-            SwipeRefreshLayout swipeRefreshLayout = (SwipeRefreshLayout)findViewById(R.id.SwipeRefreshLayoutSelectionBoard);
-            assert swipeRefreshLayout != null;
-            swipeRefreshLayout.setRefreshing(false);
-            resultToBoard(new JSONArray(result));
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    protected void doBindService() {
-        bindService(new Intent(SelectionBoard.this, ServiceHttp.class), mConnection, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-    }
-
-    @Override
-    protected void doUnbindService() {
-        if (mIsBound) {
-            if (mService != null) {
-                try {
-                    Message msg = Message.obtain(null, ServiceHttp.MSG_UNREGISTER_CLIENT);
-                    msg.replyTo = mMessenger;
-                    mService.send(msg);
-                } catch (RemoteException ignored) {
-
-                }
+    private void resultToBoard(List<String> names) {
+        if (names == null) return;
+        for (String dashboard : names) {
+            Dashboard d = new Dashboard(dashboard, COLOR[new Random().nextInt(COLOR.length)]);
+            if (!dashboards.contains(d)) {
+                dashboards.add(d);
             }
-            unbindService(mConnection);
-            mIsBound = false;
         }
+        Collections.sort(dashboards, new Comparator<Dashboard>() {
+            @Override
+            public int compare(Dashboard lhs, Dashboard rhs) {
+                return lhs.name.compareToIgnoreCase(rhs.name);
+            }
+        });
+        updateAndSetAdapter(dashboards);
     }
 
-    private void doAfterBinding() {
-        try {
-            Message msg = Message.obtain(null, ServiceHttp.MSG_GET_LIST_DASHBOARD, this.hashCode(), 0);
-            Bundle bundle = new Bundle();
-            bundle.putStringArray("params", new String[]{"getListOfDashboard", getString(R.string.server)});
-            msg.setData(bundle);
-            mService.send(msg);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
 
     @SuppressWarnings("all")
     private void updateAndSetAdapter(List<Dashboard> items) {
@@ -157,9 +139,9 @@ public class SelectionBoard extends ServiceManager {
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
                     title.setText(getItem(position).name);
-                    CircularTextView firstLetter = (CircularTextView)convertView.findViewById(R.id.firstLetter);
+                    CircularTextView firstLetter = (CircularTextView) convertView.findViewById(R.id.firstLetter);
                     firstLetter.setBackgroundColor(Color.parseColor(getItem(position).color));
-                    firstLetter.setText(getItem(position).name.substring(0,1).toUpperCase());
+                    firstLetter.setText(getItem(position).name.substring(0, 1).toUpperCase());
                     return convertView;
                 }
             };
@@ -168,28 +150,6 @@ public class SelectionBoard extends ServiceManager {
         ArrayAdapter<Dashboard> arrayAdapter = (ArrayAdapter<Dashboard>) adapter;
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
-    }
-
-    private void resultToBoard(JSONArray json) {
-        try {
-            for (int i = 0; i < json.length(); i++) {
-                String title = json.getString(i);
-                title = title.replaceAll("_", " ");
-                Dashboard dashboard = new Dashboard(title, COLOR[new Random().nextInt(COLOR.length)]);
-                if (!dashboards.contains(dashboard)) {
-                    dashboards.add(dashboard);
-                }
-            }
-            Collections.sort(dashboards, new Comparator<Dashboard>() {
-                @Override
-                public int compare(Dashboard lhs, Dashboard rhs) {
-                    return lhs.name.compareToIgnoreCase(rhs.name);
-                }
-            });
-            updateAndSetAdapter(dashboards);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -230,7 +190,6 @@ public class SelectionBoard extends ServiceManager {
                 return false;
             }
         });
-
 
 
         return true;
@@ -336,10 +295,11 @@ public class SelectionBoard extends ServiceManager {
     }
 
     private void launchNextActivity(String username, String title) {
-        Intent intent = new Intent(SelectionBoard.this, DashboardActivity.class);
+        Intent intent = new Intent(SelectionBoard.this, MainFragmentActivity.class);
         intent.putExtra("username", username);
         intent.putExtra("title", title);
-        startActivityForResult(intent, RESULT);
+        startActivity(intent);
+        //startActivityForResult(intent, RESULT);
     }
 
     private class Dashboard {
