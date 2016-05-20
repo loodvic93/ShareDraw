@@ -11,6 +11,7 @@ public class Say implements Action {
     private static final String CLASS_NAME = Say.class.getCanonicalName();
     private String author;
     private String message;
+    private int id;
     private long timestamp;
 
     private Say() { }
@@ -18,6 +19,7 @@ public class Say implements Action {
     static Say createSayAction(JSONObject jsonObject) {
         Say say = new Say();
         try {
+            say.id = jsonObject.getInt("id");
             say.author = jsonObject.getString("author");
             say.timestamp = jsonObject.getLong("timestamp");
             say.message = jsonObject.getJSONObject("message").toString();
@@ -36,6 +38,11 @@ public class Say implements Action {
     @Override
     public String getMessage() {
         return message;
+    }
+
+    @Override
+    public int getId() {
+        return id;
     }
 
     public String getContent() {

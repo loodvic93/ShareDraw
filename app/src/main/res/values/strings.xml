@@ -2,8 +2,7 @@
     <string name="app_name">ShareDraw</string>
     <string name="select_dashboard">Select a dashboard</string>
     <string name="add_new_board">Add a new board</string>
-    <!--<string name="server">109.26.15.199:7777</string>-->
-    <string name="server">192.168.1.28:7777</string>
+    <string name="server">109.26.15.199:7777</string>
     <string name="clear_canvas">Clear Canvas</string>
     <string name="title">Title</string>
     <string name="username">Username</string>

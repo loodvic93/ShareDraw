@@ -12,12 +12,14 @@ public class Admin implements Action {
     private String author;
     private String message;
     private boolean joining;
+    private int id;
 
     private Admin() { }
 
     static Admin createAdminAction(JSONObject jsonObject) {
         Admin admin = new Admin();
         try {
+            admin.id = jsonObject.getInt("id");
             admin.author = jsonObject.getString("author");
             admin.message = jsonObject.getJSONObject("message").toString();
             admin.joining = jsonObject.getJSONObject("message").getString("admin").equalsIgnoreCase("join");
@@ -35,6 +37,11 @@ public class Admin implements Action {
     @Override
     public String getMessage() {
         return message;
+    }
+
+    @Override
+    public int getId() {
+        return id;
     }
 
     public boolean isJoining() {

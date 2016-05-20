@@ -32,7 +32,7 @@ import umlv.fr.sharedraw.drawer.tools.Square;
  * @version 1.0
  */
 public class CanvasView extends View {
-    private final List<Brush> brushes = new ArrayList<>();
+    private List<Brush> brushes = new ArrayList<>();
     private Brush.BrushType brush = Brush.BrushType.FREE;
     private NotifyDraw delegate = null;
     private final Context mContext;
@@ -108,10 +108,6 @@ public class CanvasView extends View {
     }
 
     public void save() {
-        View content = this;
-        content.setDrawingCacheEnabled(true);
-        content.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-        Bitmap bitmap = content.getDrawingCache();
         String path = Environment.getExternalStorageDirectory().getAbsolutePath();
         System.out.println("PATH = " + path);
         path = Environment.getDataDirectory().getAbsolutePath();
@@ -120,7 +116,7 @@ public class CanvasView extends View {
         try {
             file.createNewFile();
             ostream = new FileOutputStream(file);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
+            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
             ostream.flush();
             ostream.close();
             Toast.makeText(mContext, "image saved", Toast.LENGTH_LONG).show();
@@ -131,7 +127,7 @@ public class CanvasView extends View {
     }
 
     public void addBrush(Brush brush) {
-
+        brushes.add(brush);
     }
 
     public void delegate(NotifyDraw delegate) {

@@ -10,7 +10,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Circle;
 import umlv.fr.sharedraw.drawer.tools.Free;
 import umlv.fr.sharedraw.drawer.tools.Line;
@@ -21,12 +20,14 @@ public class Draw implements Action {
     private static final String CLASS_NAME = Draw.class.getCanonicalName();
     private String author;
     private String message;
+    private int id;
 
     private Draw() { }
 
     static Draw createDrawAction(JSONObject jsonObject) {
         Draw draw = new Draw();
         try {
+            draw.id = jsonObject.getInt("id");
             draw.author = jsonObject.getString("author");
             draw.message = jsonObject.getJSONObject("message").toString();
         }  catch (JSONException e) {
@@ -45,11 +46,15 @@ public class Draw implements Action {
         return message;
     }
 
-    public Brush getBrush() {
-        Brush brush = null;
+    @Override
+    public int getId() {
+        return id;
+    }
+
+    public umlv.fr.sharedraw.drawer.tools.Brush getBrush() {
+        umlv.fr.sharedraw.drawer.tools.Brush brush = null;
         try {
             JSONObject json = new JSONObject(message);
-
             JSONObject shape = json.getJSONObject("draw");
             String brushName = shape.getString("shape");
             switch (brushName) {
@@ -83,7 +88,7 @@ public class Draw implements Action {
                     brush = new Line(x, y, x2, y2, color);
                     break;
                 case "free":
-                    JSONArray coordinates = json.getJSONArray("coordinates");
+                    JSONArray coordinates = shape.getJSONArray("coordinates");
                     List<Point> points = new ArrayList<>();
                     for (int i = 0; i < coordinates.length(); i++) {
                         JSONArray point = coordinates.getJSONArray(i);
@@ -96,12 +101,6 @@ public class Draw implements Action {
                 default:
                     return null;
             }
-
-
-
-
-
-
         } catch (JSONException e) {
             Log.e(CLASS_NAME, "Cannot create a brush");
         }

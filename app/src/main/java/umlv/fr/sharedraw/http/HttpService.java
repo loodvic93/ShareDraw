@@ -9,6 +9,7 @@ import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import umlv.fr.sharedraw.NotifyDraw;
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Draw;
@@ -28,11 +30,13 @@ public class HttpService extends Service {
     private final ExecutorService executor = Executors.newFixedThreadPool(5);
     private final List<Action> actions = new ArrayList<>();
     private final HttpRequest request = new HttpRequest();
-    private final List<Admin> users = new ArrayList<>();
-    private final List<Draw> draws = new ArrayList<>();
+    private final List<Admin> admins = new ArrayList<>();
+    private final List<Draw> brushs = new ArrayList<>();
     private final List<Say> says = new ArrayList<>();
+    private NotifyDraw delegate = null;
     private String mDashboard;
     private String mServer;
+    private int nextID = 0;
 
     public class HttpBinder extends Binder {
         public HttpService getService() {
@@ -73,10 +77,21 @@ public class HttpService extends Service {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                int nextID = actions.size();
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(1));
                 if (response != null) {
-                    actions.add(Proxy.createAction(response));
+                    Action action = Proxy.createAction(response);
+                    actions.add(action);
+                    if (action instanceof Admin) {
+                        admins.add((Admin) action);
+                    } else if (action instanceof Draw) {
+                        brushs.add((Draw) action);
+                        if (delegate != null) {
+                            delegate.notifyNewDraw(((Draw) action).getBrush());
+                        }
+                    } else {
+                        says.add((Say) action);
+                    }
+                    nextID++;
                 }
             }
         }, 0, 1, TimeUnit.MILLISECONDS);
@@ -137,7 +152,7 @@ public class HttpService extends Service {
     public String getMessage(final String server, final String dashboard, final int id, final int timeout) {
         // If we forgot, we launch service on specific dashboard
         if (mServer != null && mDashboard != null) {
-            return actions.get(id).getMessage();
+            return getMessage(id);
         } else {
             Callable<String> callable = new Callable<String>() {
                 @Override
@@ -162,14 +177,11 @@ public class HttpService extends Service {
     public List<String> getListOfUsersConnected() {
         List<String> users = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
-            for (Action action : actions) {
-                if (action instanceof Admin) {
-                    Admin admin = (Admin) action;
-                    if (admin.isJoining()) {
-                        users.add(admin.getAuthor());
-                    } else {
-                        users.remove(admin.getAuthor());
-                    }
+            for (Admin admin : admins) {
+                if (admin.isJoining()) {
+                    users.add(admin.getAuthor());
+                } else {
+                    users.remove(admin.getAuthor());
                 }
             }
         }
@@ -188,16 +200,7 @@ public class HttpService extends Service {
         List<String> users = new ArrayList<>();
         // If we forgot, we launch service on specific dashboard
         if (mDashboard != null && mServer != null) {
-            for (Action action : actions) {
-                if (action instanceof Admin) {
-                    Admin admin = (Admin) action;
-                    if (admin.isJoining()) {
-                        users.add(admin.getAuthor());
-                    } else {
-                        users.remove(admin.getAuthor());
-                    }
-                }
-            }
+            return getListOfUsersConnected();
         } else {
             int id = 0;
             String result = getMessage(server, dashboard, id, timeout);
@@ -225,6 +228,36 @@ public class HttpService extends Service {
     public List<Action> getListOfAction() {
         if (mServer != null && mDashboard != null) {
             return actions;
+        }
+        return null;
+    }
+
+    /**
+     * Used only if service update automatically data
+     *
+     * @return List of all DRAW ACTIONS
+     */
+    public List<Draw> getListOfDrawAction() {
+        if (mServer != null && mDashboard != null) {
+            return brushs;
+        }
+        return null;
+    }
+
+    /**
+     * Used only if service update automatically data
+     *
+     * @param index Start at index
+     * @return List of all DRAW ACTIONS
+     */
+    public List<Draw> getListOfDrawAction(int index) {
+        if (mServer != null && mDashboard != null) {
+            ListIterator<Draw> iterator = brushs.listIterator(index);
+            List<Draw> draws = new ArrayList<>();
+            while (iterator.hasNext()) {
+                draws.add(iterator.next());
+            }
+            return draws;
         }
         return null;
     }
@@ -264,6 +297,7 @@ public class HttpService extends Service {
         Callable<String> callable = new Callable<String>() {
             @Override
             public String call() throws Exception {
+                nextID++;
                 return request.request("postMessage", server, dashboard, message);
             }
         };
@@ -295,5 +329,9 @@ public class HttpService extends Service {
      */
     public void signalToLeaveDashboard(String server, String dashboard, String username) {
         postMessage(server, dashboard, "&author=" + username + "&message={\"admin\": \"leave\"}");
+    }
+
+    public void delegateDrawerActivity(NotifyDraw delegate) {
+        this.delegate = delegate;
     }
 }

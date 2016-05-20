@@ -25,8 +25,13 @@ public class Free implements Brush {
         this.paint.setColor(color);
         this.path = new Path();
 
-        for (Point p : points) {
-            this.path.lineTo(p.x, p.y);
+        for (int i = 0; i < points.size(); i++) {
+            Point p = points.get(i);
+            if (i == 0) {
+                this.path.moveTo(p.x, p.y);
+            } else {
+                this.path.lineTo(p.x, p.y);
+            }
             this.x = p.x;
             this.y = p.y;
         }
@@ -88,9 +93,9 @@ public class Free implements Brush {
         for (int i = 0; i < points.size(); i++) {
             Point p = points.get(i);
             if (i == points.size() - 1) {
-                json.append("[" + p.x + "," + p.y + "]]");
+                json.append("[").append(p.x).append(",").append(p.y).append("]]");
             } else {
-                json.append("[" + p.x + "," + p.y + "], ");
+                json.append("[").append(p.x).append(",").append(p.y).append("], ");
             }
         }
 

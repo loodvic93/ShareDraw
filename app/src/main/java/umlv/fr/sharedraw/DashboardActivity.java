@@ -12,7 +12,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.drawer.CanvasView;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 
@@ -115,7 +117,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         free.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.changeBrush(Brush.BrushType.FREE);
+                drawer.changeBrush(umlv.fr.sharedraw.drawer.tools.Brush.BrushType.FREE);
             }
         });
 
@@ -123,7 +125,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         square.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.changeBrush(Brush.BrushType.SQUARE);
+                drawer.changeBrush(umlv.fr.sharedraw.drawer.tools.Brush.BrushType.SQUARE);
             }
         });
 
@@ -131,7 +133,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         circle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.changeBrush(Brush.BrushType.CIRCLE);
+                drawer.changeBrush(umlv.fr.sharedraw.drawer.tools.Brush.BrushType.CIRCLE);
             }
         });
 
@@ -139,7 +141,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         fixedLine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.changeBrush(Brush.BrushType.LINE);
+                drawer.changeBrush(umlv.fr.sharedraw.drawer.tools.Brush.BrushType.LINE);
             }
         });
 
@@ -264,12 +266,27 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
 
     @Override
     public void notifyServiceConnected() {
-
+        List<Draw> draws = MainFragmentActivity.HTTP_SERVICE.getListOfDrawAction();
+        if (draws != null) {
+            for (Draw draw : draws) {
+                drawer.addBrush(draw.getBrush());
+            }
+            drawer.invalidate();
+        }
+        MainFragmentActivity.HTTP_SERVICE.delegateDrawerActivity(this);
     }
 
     @Override
-    public void notifyOnDraw(Brush brush) {
+    public void notifyOnDraw(umlv.fr.sharedraw.drawer.tools.Brush brush) {
         System.out.println("JSON = " + brush.getJson());
         MainFragmentActivity.HTTP_SERVICE.postMessage(getString(R.string.server), mTitle, "&author=" + mUsername + "&message=" + brush.getJson());
+    }
+
+    @Override
+    public void notifyNewDraw(Brush brush) {
+        if (brush == null) return;
+        System.out.println("NOTIFY NEW DRAW = " + brush.getJson());
+        drawer.addBrush(brush);
+        drawer.invalidate();
     }
 }
