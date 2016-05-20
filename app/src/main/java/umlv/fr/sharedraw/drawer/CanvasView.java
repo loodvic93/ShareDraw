@@ -118,8 +118,10 @@ public class CanvasView extends View {
         if (success) {
             try {
                 FileOutputStream output = new FileOutputStream(myFile, true);
-                //String data= "Ce que je veux ecrire dans mon fichier \r\n";
-                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                Bitmap  bitmap = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bitmap);
+                this.draw(canvas);
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
                 Toast.makeText(mContext, name + " " + mContext.getString(R.string.saved), Toast.LENGTH_LONG).show();
             } catch (IOException e) {
                 Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
