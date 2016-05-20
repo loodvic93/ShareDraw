@@ -29,8 +29,6 @@
             android:theme="@style/AppTheme.NoActionBar" />
 
         <service android:name=".http.HttpService" />
-
-        <activity android:name=".MessageActivity"></activity>
     </application>
 
 </manifest>
