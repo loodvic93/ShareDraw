@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.util.Log;
 
 import org.json.JSONArray;
 
@@ -27,6 +28,7 @@ import umlv.fr.sharedraw.actions.Say;
 @SuppressWarnings("ALL")
 public class HttpService extends Service {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final static String CLASS_NAME = HttpService.class.getCanonicalName();
     private final ExecutorService executor = Executors.newFixedThreadPool(5);
     private final List<Action> actions = new ArrayList<>();
     private final HttpRequest request = new HttpRequest();
@@ -34,9 +36,9 @@ public class HttpService extends Service {
     private final List<Draw> brushs = new ArrayList<>();
     private final List<Say> says = new ArrayList<>();
     private NotifyDraw delegate = null;
+    private volatile int nextID = 0;
     private String mDashboard;
     private String mServer;
-    private int nextID = 0;
 
     public class HttpBinder extends Binder {
         public HttpService getService() {
@@ -51,7 +53,28 @@ public class HttpService extends Service {
         mServer = intent.getStringExtra("server");
         mDashboard = intent.getStringExtra("title");
         if (mDashboard != null && mServer != null) {
-            updateActions();
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
+                    System.out.println("RESP = " + response);
+                    while (response != null) {
+                        putInList(response);
+                        nextID++;
+                        response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
+                        System.out.println("RESP = " + response);
+                    }
+                }
+            });
+            thread.start();
+            try {
+                thread.join();
+                System.out.println("UPDATE ACTION");
+                updateActions();
+            } catch (InterruptedException e) {
+                Log.e(CLASS_NAME, "Cannot get previous actions");
+            }
+
         }
         return binder;
     }
@@ -61,6 +84,8 @@ public class HttpService extends Service {
         mServer = intent.getStringExtra("server");
         mDashboard = intent.getStringExtra("title");
         if (mDashboard != null && mServer != null) {
+            System.out.println("NEXT ID = " + nextID);
+            System.out.println("SIZE ACTION = " + actions.size());
             updateActions();
         }
         super.onRebind(intent);
@@ -77,24 +102,28 @@ public class HttpService extends Service {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(1));
+                String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
-                    Action action = Proxy.createAction(response);
-                    actions.add(action);
-                    if (action instanceof Admin) {
-                        admins.add((Admin) action);
-                    } else if (action instanceof Draw) {
-                        brushs.add((Draw) action);
-                        if (delegate != null) {
-                            delegate.notifyNewDraw(((Draw) action).getBrush());
-                        }
-                    } else {
-                        says.add((Say) action);
-                    }
+                    putInList(response);
                     nextID++;
                 }
             }
-        }, 0, 1, TimeUnit.MILLISECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
+    }
+
+    private void putInList(String response) {
+        Action action = Proxy.createAction(response);
+        actions.add(action);
+        if (action instanceof Admin) {
+            admins.add((Admin) action);
+        } else if (action instanceof Draw) {
+            brushs.add((Draw) action);
+            if (delegate != null) {
+                delegate.notifyNewDraw(((Draw) action).getBrush());
+            }
+        } else if (action instanceof Say) {
+            says.add((Say) action);
+        }
     }
 
     // API
