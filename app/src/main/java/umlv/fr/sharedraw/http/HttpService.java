@@ -182,11 +182,13 @@ public class HttpService extends Service {
         List<String> users = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
             List<Action> actionList = actions.get(Admin.class);
-            for (Action admin : actionList) {
-                if (((Admin)admin).isJoining()) {
-                    users.add(admin.getAuthor());
-                } else {
-                    users.remove(admin.getAuthor());
+            if (actionList != null) {
+                for (Action admin : actionList) {
+                    if (((Admin) admin).isJoining()) {
+                        users.add(admin.getAuthor());
+                    } else {
+                        users.remove(admin.getAuthor());
+                    }
                 }
             }
         }
