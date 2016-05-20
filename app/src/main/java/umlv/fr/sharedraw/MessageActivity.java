@@ -22,7 +22,6 @@ public class MessageActivity extends Fragment implements NotifyService {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        System.out.println("INFLATE");
         return inflater.inflate(R.layout.activity_message, container, false);
     }
 

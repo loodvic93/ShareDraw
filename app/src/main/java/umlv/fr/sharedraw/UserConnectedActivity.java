@@ -38,7 +38,6 @@ public class UserConnectedActivity extends Fragment implements NotifyService {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         if (connected == null && MainFragmentActivity.HTTP_SERVICE != null) {
-            System.out.println("TEST");
             notifyServiceConnected();
         }
     }
@@ -72,7 +71,6 @@ public class UserConnectedActivity extends Fragment implements NotifyService {
             lv.setAdapter(adapter);
         }
         ArrayAdapter<String> arrayAdapter = (ArrayAdapter<String>) adapter;
-        System.out.println("ADAPTER");
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
         arrayAdapter.setNotifyOnChange(true);
@@ -81,7 +79,6 @@ public class UserConnectedActivity extends Fragment implements NotifyService {
     @Override
     public void notifyServiceConnected() {
         connected = MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected();
-        System.out.println("CONNECTED = " + connected);
         updateAndSetAdapter(connected);
     }
 }

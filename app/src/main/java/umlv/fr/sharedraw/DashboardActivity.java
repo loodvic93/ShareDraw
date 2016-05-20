@@ -18,6 +18,7 @@ import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.drawer.CanvasView;
 import umlv.fr.sharedraw.drawer.tools.Brush;
+import umlv.fr.sharedraw.drawer.tools.Clean;
 
 
 public class DashboardActivity extends Fragment implements NotifyService, NotifyDraw {
@@ -61,13 +62,11 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
 
         getActivity().findViewById(R.id.palette).setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public boolean onTouch(View view, MotionEvent event)
-            {
+            public boolean onTouch(View view, MotionEvent event) {
                 FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) view.getLayoutParams();
                 if (view.getId() != R.id.palette) return false;
 
-                switch (event.getAction())
-                {
+                switch (event.getAction()) {
                     case MotionEvent.ACTION_MOVE:
                         params.topMargin = (int) event.getRawY() - view.getHeight();
                         params.leftMargin = (int) event.getRawX() - (view.getWidth() / 2);
@@ -90,7 +89,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         });
 
 
-        ImageButton stroke = (ImageButton)getActivity().findViewById(R.id.imageButton_stroke);
+        ImageButton stroke = (ImageButton) getActivity().findViewById(R.id.imageButton_stroke);
         stroke.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -98,7 +97,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton save = (ImageButton)getActivity().findViewById(R.id.imageButton_save);
+        ImageButton save = (ImageButton) getActivity().findViewById(R.id.imageButton_save);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,7 +105,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton clean = (ImageButton)getActivity().findViewById(R.id.imageButton_clear);
+        ImageButton clean = (ImageButton) getActivity().findViewById(R.id.imageButton_clear);
         clean.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -115,7 +114,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton free = (ImageButton)getActivity().findViewById(R.id.imageButton_line);
+        ImageButton free = (ImageButton) getActivity().findViewById(R.id.imageButton_line);
         free.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -123,7 +122,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton square = (ImageButton)getActivity().findViewById(R.id.imageButton_square);
+        ImageButton square = (ImageButton) getActivity().findViewById(R.id.imageButton_square);
         square.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -131,7 +130,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton circle = (ImageButton)getActivity().findViewById(R.id.imageButton_circle);
+        ImageButton circle = (ImageButton) getActivity().findViewById(R.id.imageButton_circle);
         circle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,7 +138,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton fixedLine = (ImageButton)getActivity().findViewById(R.id.fixedline);
+        ImageButton fixedLine = (ImageButton) getActivity().findViewById(R.id.fixedline);
         fixedLine.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,7 +146,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        final ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
+        final ImageButton black = (ImageButton) getActivity().findViewById(R.id.imageButton_color_black);
         black.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -156,7 +155,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
+        ImageButton white = (ImageButton) getActivity().findViewById(R.id.imageButton_color_white);
         white.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -165,7 +164,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
+        ImageButton red = (ImageButton) getActivity().findViewById(R.id.imageButton_color_red);
         red.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -174,7 +173,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
+        ImageButton green = (ImageButton) getActivity().findViewById(R.id.imageButton_color_green);
         green.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -183,7 +182,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
+        ImageButton blue = (ImageButton) getActivity().findViewById(R.id.imageButton_color_blue);
         blue.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -192,7 +191,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        ImageButton yellow = (ImageButton) getActivity().findViewById(R.id.imageButton_color_yellow);
         yellow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -201,7 +200,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             }
         });
 
-        ImageButton palette = (ImageButton)getActivity().findViewById(R.id.paletteChoose);
+        ImageButton palette = (ImageButton) getActivity().findViewById(R.id.paletteChoose);
         palette.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -215,12 +214,12 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
     }
 
     private void hideAllColorButton() {
-        ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
-        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
-        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
-        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
-        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
-        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        ImageButton black = (ImageButton) getActivity().findViewById(R.id.imageButton_color_black);
+        ImageButton white = (ImageButton) getActivity().findViewById(R.id.imageButton_color_white);
+        ImageButton red = (ImageButton) getActivity().findViewById(R.id.imageButton_color_red);
+        ImageButton green = (ImageButton) getActivity().findViewById(R.id.imageButton_color_green);
+        ImageButton blue = (ImageButton) getActivity().findViewById(R.id.imageButton_color_blue);
+        ImageButton yellow = (ImageButton) getActivity().findViewById(R.id.imageButton_color_yellow);
         black.setVisibility(View.GONE);
         white.setVisibility(View.GONE);
         red.setVisibility(View.GONE);
@@ -230,12 +229,12 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
     }
 
     private void showAllColorButton() {
-        ImageButton black = (ImageButton)getActivity().findViewById(R.id.imageButton_color_black);
-        ImageButton white = (ImageButton)getActivity().findViewById(R.id.imageButton_color_white);
-        ImageButton red = (ImageButton)getActivity().findViewById(R.id.imageButton_color_red);
-        ImageButton green = (ImageButton)getActivity().findViewById(R.id.imageButton_color_green);
-        ImageButton blue = (ImageButton)getActivity().findViewById(R.id.imageButton_color_blue);
-        ImageButton yellow = (ImageButton)getActivity().findViewById(R.id.imageButton_color_yellow);
+        ImageButton black = (ImageButton) getActivity().findViewById(R.id.imageButton_color_black);
+        ImageButton white = (ImageButton) getActivity().findViewById(R.id.imageButton_color_white);
+        ImageButton red = (ImageButton) getActivity().findViewById(R.id.imageButton_color_red);
+        ImageButton green = (ImageButton) getActivity().findViewById(R.id.imageButton_color_green);
+        ImageButton blue = (ImageButton) getActivity().findViewById(R.id.imageButton_color_blue);
+        ImageButton yellow = (ImageButton) getActivity().findViewById(R.id.imageButton_color_yellow);
         black.setVisibility(View.VISIBLE);
         white.setVisibility(View.VISIBLE);
         red.setVisibility(View.VISIBLE);
@@ -271,7 +270,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         List<Action> draws = MainFragmentActivity.HTTP_SERVICE.getListOfDrawAction();
         if (draws != null) {
             for (Action draw : draws) {
-                drawer.addBrush(((Draw)draw).getBrush());
+                drawer.addBrush(((Draw) draw).getBrush());
             }
             drawer.invalidate();
         }
@@ -280,7 +279,6 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
 
     @Override
     public void notifyOnDraw(umlv.fr.sharedraw.drawer.tools.Brush brush) {
-        System.out.println("JSON = " + brush.getJson());
         MainFragmentActivity.HTTP_SERVICE.postMessage(getString(R.string.server), mTitle, "&author=" + mUsername + "&message=" + brush.getJson());
     }
 
@@ -291,9 +289,11 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
     @Override
     public void notifyNewDraw(Brush brush) {
         if (brush == null) return;
-        System.out.println("NOTIFY NEW DRAW = " + brush.getJson());
-        drawer.addBrush(brush);
-        drawer.invalidate();
-        MainFragmentActivity.HTTP_SERVICE.updateActions();
+        if (brush instanceof Clean) {
+            drawer.clearCanvas(false);
+        } else {
+            drawer.addBrush(brush);
+            drawer.postInvalidate();
+        }
     }
 }

@@ -25,6 +25,8 @@ import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.actions.Proxy;
 import umlv.fr.sharedraw.actions.Say;
+import umlv.fr.sharedraw.drawer.tools.Brush;
+import umlv.fr.sharedraw.drawer.tools.Clean;
 
 public class HttpService extends Service {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -98,8 +100,8 @@ public class HttpService extends Service {
             public void run() {
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
-                    saveResponse(response);
                     nextID++;
+                    saveResponse(response);
                 }
             }
         }, 0, 2, TimeUnit.SECONDS);
@@ -121,10 +123,15 @@ public class HttpService extends Service {
                 drawActionList = new ArrayList<>();
                 actions.put(Draw.class, drawActionList);
             }
-            drawActionList.add(action);
+            Draw draw = (Draw)action;
+            Brush brush = draw.getBrush();
+            if (brush instanceof Clean) {
+                drawActionList.clear();
+            } else {
+                drawActionList.add(action);
+            }
             if (delegate != null) {
-                System.out.println("NOTIFY");
-                delegate.notifyNewDraw(((Draw) action).getBrush());
+                delegate.notifyNewDraw(brush);
             }
         } else if (action instanceof Say) {
             List<Action> sayActionList = actions.get(Say.class);
@@ -175,9 +182,7 @@ public class HttpService extends Service {
         List<String> users = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
             List<Action> actionList = actions.get(Admin.class);
-            System.out.println("SIZE ACTIONS LIST = " + actionList.size());
             for (Action admin : actionList) {
-                System.out.println("ACTION MESSAGE = " + admin.getMessage());
                 if (((Admin)admin).isJoining()) {
                     users.add(admin.getAuthor());
                 } else {
@@ -217,8 +222,7 @@ public class HttpService extends Service {
             }
         };
         try {
-            Future<String> future = executor.submit(callable);
-            System.out.println("RESULT = " + future.get());
+            executor.submit(callable);
         } catch (Exception e) {
             // Do Nothing
         }

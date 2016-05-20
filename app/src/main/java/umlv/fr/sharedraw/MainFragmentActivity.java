@@ -123,7 +123,6 @@ public class MainFragmentActivity extends AppCompatActivity {
                     userConnectedActivity = UserConnectedActivity.newInstance();
                     return userConnectedActivity;
                 case 2:
-                    System.out.println("CASE 2");
                     messageActivity = MessageActivity.newInstance();
                     return messageActivity;
                 default:

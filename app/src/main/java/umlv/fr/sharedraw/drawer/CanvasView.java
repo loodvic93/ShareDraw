@@ -108,6 +108,16 @@ public class CanvasView extends View {
         invalidate();
     }
 
+    public void clearCanvas(boolean invalidate) {
+        mPath.reset();
+        brushes.clear();
+        if (invalidate) {
+            invalidate();
+        } else {
+            postInvalidate();
+        }
+    }
+
     public void save(String name) {
         File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw", name + ".bmp");
         if (myFile.exists()) {
