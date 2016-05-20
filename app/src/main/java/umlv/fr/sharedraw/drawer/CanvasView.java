@@ -109,8 +109,8 @@ public class CanvasView extends View {
     }
 
     public void save(String name) {
-        File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "ShareDraw", name + ".txt");
-        File myDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "ShareDraw");
+        File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw", name + ".bmp");
+        File myDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw");
         Boolean success = true;
         if (!myDir.exists()) {
             success = myDir.mkdir();
@@ -118,9 +118,8 @@ public class CanvasView extends View {
         if (success) {
             try {
                 FileOutputStream output = new FileOutputStream(myFile, true);
-                String data= "Ce que je veux ecrire dans mon fichier \r\n";
-                output.write(data.getBytes());
-                //mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                //String data= "Ce que je veux ecrire dans mon fichier \r\n";
+                mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
                 Toast.makeText(mContext, name + " " + mContext.getString(R.string.saved), Toast.LENGTH_LONG).show();
             } catch (IOException e) {
                 Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
