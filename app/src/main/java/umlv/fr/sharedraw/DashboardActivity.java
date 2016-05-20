@@ -19,10 +19,11 @@ import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.drawer.CanvasView;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Clean;
+import umlv.fr.sharedraw.notifier.NotifyDraw;
+import umlv.fr.sharedraw.notifier.NotifyService;
 
 
 public class DashboardActivity extends Fragment implements NotifyService, NotifyDraw {
-    private ArrayList<Integer> actionForCurrentUser = new ArrayList<>();
     private CanvasView drawer;
     private String mUsername;
     private String mTitle;
@@ -249,7 +250,6 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         super.onSaveInstanceState(outState);
         outState.putString("username", mUsername);
         outState.putString("title", mTitle);
-        outState.putIntegerArrayList("actionForCurrentUser", actionForCurrentUser);
     }
 
     @SuppressWarnings("all")
@@ -257,7 +257,6 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         if (savedInstanceState != null) {
             mUsername = savedInstanceState.getString("username");
             mTitle = savedInstanceState.getString("title");
-            actionForCurrentUser = savedInstanceState.getIntegerArrayList("actionForCurrentUser");
         } else {
             Bundle bundle = getArguments();
             mUsername = bundle.getString("username");

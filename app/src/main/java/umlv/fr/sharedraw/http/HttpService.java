@@ -19,7 +19,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import umlv.fr.sharedraw.NotifyDraw;
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Draw;
@@ -27,17 +26,21 @@ import umlv.fr.sharedraw.actions.Proxy;
 import umlv.fr.sharedraw.actions.Say;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Clean;
+import umlv.fr.sharedraw.notifier.NotifyAdmin;
+import umlv.fr.sharedraw.notifier.NotifyDraw;
 
 public class HttpService extends Service {
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-    private final Map<Class<?>, List<Action>> actions = new HashMap<>();
+    private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final static String CLASS_NAME = HttpService.class.getCanonicalName();
-    private final ExecutorService executor = Executors.newFixedThreadPool(5);
+    private final Map<Class<?>, List<Action>> actions = new HashMap<>();
+    private ExecutorService executor = Executors.newFixedThreadPool(5);
     private final HttpRequest request = new HttpRequest();
-    private NotifyDraw delegate = null;
+    private NotifyDraw delegateDrawer = null;
+    private NotifyAdmin delegateAdmin = null;
     private volatile int nextID = 0;
     private String mDashboard;
     private String mServer;
+
 
     public class HttpBinder extends Binder {
         public HttpService getService() {
@@ -76,28 +79,29 @@ public class HttpService extends Service {
     }
 
     @Override
-    public void onRebind(Intent intent) {
-        mServer = intent.getStringExtra("server");
-        mDashboard = intent.getStringExtra("title");
-        if (mDashboard != null && mServer != null) {
-            System.out.println("NEXT ID = " + nextID);
-            System.out.println("SIZE ACTION = " + actions.size());
-            updateActions();
-        }
-        super.onRebind(intent);
-    }
-
-    @Override
     public boolean onUnbind(Intent intent) {
         scheduler.shutdownNow();
         executor.shutdown();
         return super.onUnbind(intent);
     }
 
+    public void stopListener() {
+        scheduler.shutdownNow();
+        executor.shutdown();
+    }
+
+    public void restartListener() {
+        System.out.println("SIZE ACTIONS = " + actions.get(Draw.class).size());
+        scheduler = Executors.newScheduledThreadPool(1);
+        executor = Executors.newFixedThreadPool(5);
+        updateActions();
+    }
+
     public void updateActions() {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
+                System.out.println("RUN");
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
                     nextID++;
@@ -117,6 +121,10 @@ public class HttpService extends Service {
                 actions.put(Admin.class, adminActionList);
             }
             adminActionList.add(action);
+            if (delegateAdmin != null) {
+                System.out.println("NOTIFY");
+                delegateAdmin.notifyUsers((Admin) action);
+            }
         } else if (action instanceof Draw) {
             List<Action> drawActionList = actions.get(Draw.class);
             if (drawActionList == null) {
@@ -130,8 +138,8 @@ public class HttpService extends Service {
             } else {
                 drawActionList.add(action);
             }
-            if (delegate != null) {
-                delegate.notifyNewDraw(brush);
+            if (delegateDrawer != null) {
+                delegateDrawer.notifyNewDraw(brush);
             }
         } else if (action instanceof Say) {
             List<Action> sayActionList = actions.get(Say.class);
@@ -253,6 +261,10 @@ public class HttpService extends Service {
     }
 
     public void delegateDrawerActivity(NotifyDraw delegate) {
-        this.delegate = delegate;
+        this.delegateDrawer = delegate;
+    }
+
+    public void delegateAdminActivity(NotifyAdmin delegate) {
+        this.delegateAdmin = delegate;
     }
 }

@@ -1,4 +1,4 @@
-package umlv.fr.sharedraw;
+package umlv.fr.sharedraw.notifier;
 
 public interface NotifyService {
     void notifyServiceConnected();

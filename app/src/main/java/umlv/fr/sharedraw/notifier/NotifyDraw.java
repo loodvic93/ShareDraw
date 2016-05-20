@@ -1,4 +1,4 @@
-package umlv.fr.sharedraw;
+package umlv.fr.sharedraw.notifier;
 
 import umlv.fr.sharedraw.drawer.tools.Brush;
 

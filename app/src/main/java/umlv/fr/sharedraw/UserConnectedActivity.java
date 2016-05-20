@@ -1,5 +1,7 @@
 package umlv.fr.sharedraw;
 
+import android.database.DataSetObserver;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -13,7 +15,12 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class UserConnectedActivity extends Fragment implements NotifyService {
+import umlv.fr.sharedraw.actions.Admin;
+import umlv.fr.sharedraw.notifier.NotifyAdmin;
+import umlv.fr.sharedraw.notifier.NotifyService;
+
+public class UserConnectedActivity extends Fragment implements NotifyService, NotifyAdmin {
+    private ArrayAdapter<String> arrayAdapter;
     private List<String> connected;
 
     public UserConnectedActivity() {
@@ -69,16 +76,23 @@ public class UserConnectedActivity extends Fragment implements NotifyService {
                 }
             };
             lv.setAdapter(adapter);
+            arrayAdapter = (ArrayAdapter<String>) adapter;
+            arrayAdapter.setNotifyOnChange(false);
         }
-        ArrayAdapter<String> arrayAdapter = (ArrayAdapter<String>) adapter;
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
-        arrayAdapter.setNotifyOnChange(true);
     }
 
     @Override
     public void notifyServiceConnected() {
         connected = MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected();
         updateAndSetAdapter(connected);
+        MainFragmentActivity.HTTP_SERVICE.delegateAdminActivity(this);
+    }
+
+    @Override
+    public void notifyUsers(Admin admin) {
+        connected.add(admin.getAuthor());
+        arrayAdapter.add(admin.getAuthor());
     }
 }

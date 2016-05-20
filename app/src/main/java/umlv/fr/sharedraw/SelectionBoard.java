@@ -8,6 +8,8 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -40,7 +42,7 @@ import umlv.fr.sharedraw.http.HttpService.HttpBinder;
 
 public class SelectionBoard extends AppCompatActivity {
     private static final String[] COLOR = {"#F49AC2", "#CB99C9", "#C23B22", "#FFD1DC", "#DEA5A4", "#AEC6CF", "#77DD77", "#CFCFC4", "#B39EB5", "#FFB347", "#B19CD9", "#FF6961", "#03C03C", "#FDFD96", "#836953", "#779ECB", "#966FD6"};
-    private final ArrayList<Dashboard> dashboards = new ArrayList<>();
+    private ArrayList<Dashboard> dashboards = new ArrayList<>();
     private HttpService httpService;
 
     @Override
@@ -67,6 +69,19 @@ public class SelectionBoard extends AppCompatActivity {
                 getListOfDashboard();
             }
         });
+
+        if (savedInstanceState != null) {
+            dashboards = savedInstanceState.getParcelableArrayList("dashboards");
+            updateAndSetAdapter(dashboards);
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        System.out.println("SAVE");
+        outState.putParcelableArrayList("dashboards", dashboards);
+
     }
 
     private final ServiceConnection connection = new ServiceConnection() {
@@ -74,7 +89,9 @@ public class SelectionBoard extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             HttpBinder binder = (HttpBinder) service;
             httpService = binder.getService();
-            getListOfDashboard();
+            if (dashboards.isEmpty()) {
+                getListOfDashboard();
+            }
         }
 
         @Override
@@ -158,6 +175,7 @@ public class SelectionBoard extends AppCompatActivity {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
+                query = query.replaceAll(" ", "_");
                 List<Dashboard> filterDashboard = new ArrayList<>();
                 if (query.isEmpty()) {
                     updateAndSetAdapter(dashboards);
@@ -174,6 +192,7 @@ public class SelectionBoard extends AppCompatActivity {
 
             @Override
             public boolean onQueryTextChange(String newText) {
+                newText = newText.replaceAll(" ", "_");
                 List<Dashboard> filterDashboard = new ArrayList<>();
                 if (newText.isEmpty()) {
                     updateAndSetAdapter(dashboards);
@@ -297,10 +316,9 @@ public class SelectionBoard extends AppCompatActivity {
         intent.putExtra("username", username);
         intent.putExtra("title", title);
         startActivity(intent);
-        //startActivityForResult(intent, RESULT);
     }
 
-    private class Dashboard {
+    private class Dashboard implements Parcelable {
         private final String name;
         private final String color;
 
@@ -308,6 +326,24 @@ public class SelectionBoard extends AppCompatActivity {
             this.name = name;
             this.color = color;
         }
+
+        protected Dashboard(Parcel in) {
+            name = in.readString();
+            color = in.readString();
+        }
+
+        @SuppressWarnings("unused")
+        public final Creator<Dashboard> CREATOR = new Creator<Dashboard>() {
+            @Override
+            public Dashboard createFromParcel(Parcel in) {
+                return new Dashboard(in);
+            }
+
+            @Override
+            public Dashboard[] newArray(int size) {
+                return new Dashboard[size];
+            }
+        };
 
         @Override
         public boolean equals(Object o) {
@@ -323,6 +359,17 @@ public class SelectionBoard extends AppCompatActivity {
         @Override
         public int hashCode() {
             return name != null ? name.hashCode() : 0;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            dest.writeString(name);
+            dest.writeString(color);
         }
     }
 }
