@@ -240,7 +240,7 @@ public class SelectionBoard extends AppCompatActivity {
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
         if (currantTitle != null) {
-            title.setText(currantTitle);
+            title.setText(currantTitle.replaceAll("_", " "));
             title.setEnabled(false);
         } else {
             title.setEnabled(true);

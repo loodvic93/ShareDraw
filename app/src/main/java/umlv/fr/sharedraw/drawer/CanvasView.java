@@ -110,6 +110,9 @@ public class CanvasView extends View {
 
     public void save(String name) {
         File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw", name + ".bmp");
+        if (myFile.exists()) {
+            myFile.delete();
+        }
         File myDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw");
         Boolean success = true;
         if (!myDir.exists()) {
