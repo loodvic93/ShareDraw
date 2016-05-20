@@ -56,21 +56,19 @@ public class Line implements Brush {
 
     @Override
     public String getJson() {
-        StringBuilder json = new StringBuilder();
-        json.append("{")
-                .append("\"draw\": {")
-                .append("\"shape\": \"line\",")
-                .append("\"x\":").append(x).append(",")
-                .append("\"y\":").append(y).append(",")
-                .append("\"x2\":").append(x2).append(",")
-                .append("\"y2\":")
-                .append(y2)
-                .append("},")
-                .append("\"options\": {")
-                .append("\"color\":")
-                .append(paint.getColor())
-                .append("}")
-                .append("}");
-        return json.toString();
+        return "{" +
+                "\"draw\": {" +
+                "\"shape\": \"line\"," +
+                "\"x\":" + x + "," +
+                "\"y\":" + y + "," +
+                "\"x2\":" + x2 + "," +
+                "\"y2\":" +
+                y2 +
+                "}," +
+                "\"options\": {" +
+                "\"color\":" +
+                paint.getColor() +
+                "}" +
+                "}";
     }
 }

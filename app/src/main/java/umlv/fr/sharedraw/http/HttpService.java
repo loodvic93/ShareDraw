@@ -9,8 +9,9 @@ import android.util.Log;
 import org.json.JSONArray;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,16 +26,12 @@ import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.actions.Proxy;
 import umlv.fr.sharedraw.actions.Say;
 
-@SuppressWarnings("ALL")
 public class HttpService extends Service {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final Map<Class<?>, List<Action>> actions = new HashMap<>();
     private final static String CLASS_NAME = HttpService.class.getCanonicalName();
     private final ExecutorService executor = Executors.newFixedThreadPool(5);
-    private final List<Action> actions = new ArrayList<>();
     private final HttpRequest request = new HttpRequest();
-    private final List<Admin> admins = new ArrayList<>();
-    private final List<Draw> brushs = new ArrayList<>();
-    private final List<Say> says = new ArrayList<>();
     private NotifyDraw delegate = null;
     private volatile int nextID = 0;
     private String mDashboard;
@@ -57,19 +54,16 @@ public class HttpService extends Service {
                 @Override
                 public void run() {
                     String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
-                    System.out.println("RESP = " + response);
                     while (response != null) {
-                        putInList(response);
+                        saveResponse(response);
                         nextID++;
                         response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
-                        System.out.println("RESP = " + response);
                     }
                 }
             });
             thread.start();
             try {
                 thread.join();
-                System.out.println("UPDATE ACTION");
                 updateActions();
             } catch (InterruptedException e) {
                 Log.e(CLASS_NAME, "Cannot get previous actions");
@@ -98,31 +92,47 @@ public class HttpService extends Service {
         return super.onUnbind(intent);
     }
 
-    private void updateActions() {
+    public void updateActions() {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
-                    putInList(response);
+                    saveResponse(response);
                     nextID++;
                 }
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        }, 0, 2, TimeUnit.SECONDS);
     }
 
-    private void putInList(String response) {
+    @SuppressWarnings("unchecked")
+    private void saveResponse(String response) {
         Action action = Proxy.createAction(response);
-        actions.add(action);
-        if (action instanceof Admin) {
-            admins.add((Admin) action);
+        if (action instanceof  Admin) {
+            List<Action> adminActionList = actions.get(Admin.class);
+            if (adminActionList == null) {
+                adminActionList = new ArrayList<>();
+                actions.put(Admin.class, adminActionList);
+            }
+            adminActionList.add(action);
         } else if (action instanceof Draw) {
-            brushs.add((Draw) action);
+            List<Action> drawActionList = actions.get(Draw.class);
+            if (drawActionList == null) {
+                drawActionList = new ArrayList<>();
+                actions.put(Draw.class, drawActionList);
+            }
+            drawActionList.add(action);
             if (delegate != null) {
+                System.out.println("NOTIFY");
                 delegate.notifyNewDraw(((Draw) action).getBrush());
             }
         } else if (action instanceof Say) {
-            says.add((Say) action);
+            List<Action> sayActionList = actions.get(Say.class);
+            if (sayActionList == null) {
+                sayActionList = new ArrayList<>();
+                actions.put(Say.class, sayActionList);
+            }
+            sayActionList.add(action);
         }
     }
 
@@ -158,56 +168,17 @@ public class HttpService extends Service {
     /**
      * Used if service update automatically data
      *
-     * @param id Id of message
-     * @return Content of message
-     */
-    public String getMessage(final int id) {
-        if (mServer != null && mDashboard != null) {
-            return actions.get(id).getMessage();
-        }
-        return null;
-    }
-
-    /**
-     * Get a specific message from dashboard
-     *
-     * @param server    IP address of server
-     * @param dashboard Name of dashboard
-     * @param id        Id of message
-     * @param timeout   Timeout before cancel
-     * @return Result in String as JSON
-     */
-
-    public String getMessage(final String server, final String dashboard, final int id, final int timeout) {
-        // If we forgot, we launch service on specific dashboard
-        if (mServer != null && mDashboard != null) {
-            return getMessage(id);
-        } else {
-            Callable<String> callable = new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return request.request("getMessage", server, dashboard, Integer.toString(id), Integer.toString(timeout));
-                }
-            };
-            try {
-                Future<String> future = executor.submit(callable);
-                return future.get();
-            } catch (Exception e) {
-                return null;
-            }
-        }
-    }
-
-    /**
-     * Used if service update automatically data
-     *
      * @return List of all users connected on current dashboard
      */
+    @SuppressWarnings("unchecked")
     public List<String> getListOfUsersConnected() {
         List<String> users = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
-            for (Admin admin : admins) {
-                if (admin.isJoining()) {
+            List<Action> actionList = actions.get(Admin.class);
+            System.out.println("SIZE ACTIONS LIST = " + actionList.size());
+            for (Action admin : actionList) {
+                System.out.println("ACTION MESSAGE = " + admin.getMessage());
+                if (((Admin)admin).isJoining()) {
                     users.add(admin.getAuthor());
                 } else {
                     users.remove(admin.getAuthor());
@@ -218,101 +189,16 @@ public class HttpService extends Service {
     }
 
     /**
-     * Get list of all users connected
-     *
-     * @param server    IP address of server
-     * @param dashboard Name of dashboard
-     * @param timeout   Timeout before cancel
-     * @return List of String as JSON
-     */
-    public List<String> getListOfUsersConnected(String server, String dashboard, int timeout) {
-        List<String> users = new ArrayList<>();
-        // If we forgot, we launch service on specific dashboard
-        if (mDashboard != null && mServer != null) {
-            return getListOfUsersConnected();
-        } else {
-            int id = 0;
-            String result = getMessage(server, dashboard, id, timeout);
-            while (result != null) {
-                Action action = Proxy.createAction(result);
-                if (action instanceof Admin) {
-                    Admin admin = (Admin) action;
-                    if (admin.isJoining()) {
-                        users.add(admin.getAuthor());
-                    } else {
-                        users.remove(admin.getAuthor());
-                    }
-                }
-                result = getMessage(server, dashboard, id++, timeout);
-            }
-        }
-        return users;
-    }
-
-    /**
-     * Used if service update automatically data
-     *
-     * @return List of all ACTIONS
-     */
-    public List<Action> getListOfAction() {
-        if (mServer != null && mDashboard != null) {
-            return actions;
-        }
-        return null;
-    }
-
-    /**
      * Used only if service update automatically data
      *
      * @return List of all DRAW ACTIONS
      */
-    public List<Draw> getListOfDrawAction() {
+    @SuppressWarnings("unchecked")
+    public List<Action> getListOfDrawAction() {
         if (mServer != null && mDashboard != null) {
-            return brushs;
+            return actions.get(Draw.class);
         }
         return null;
-    }
-
-    /**
-     * Used only if service update automatically data
-     *
-     * @param index Start at index
-     * @return List of all DRAW ACTIONS
-     */
-    public List<Draw> getListOfDrawAction(int index) {
-        if (mServer != null && mDashboard != null) {
-            ListIterator<Draw> iterator = brushs.listIterator(index);
-            List<Draw> draws = new ArrayList<>();
-            while (iterator.hasNext()) {
-                draws.add(iterator.next());
-            }
-            return draws;
-        }
-        return null;
-    }
-
-    /**
-     * Get list of all previous ACTIONS
-     *
-     * @param server    IP Address of server
-     * @param dashboard Name of dashboard
-     * @param timeout   Timeout before cancel
-     * @return List of all ACTIONS
-     */
-    public List<Action> getListOfAction(String server, String dashboard, int timeout) {
-        // If we forgot, we launch service on specific dashboard
-        if (mServer != null && mDashboard != null) {
-            return actions;
-        } else {
-            List<Action> actions = new ArrayList<>();
-            int id = 0;
-            String result = getMessage(server, dashboard, id, timeout);
-            while (result != null) {
-                actions.add(Proxy.createAction(result));
-                result = getMessage(server, dashboard, id++, timeout);
-            }
-            return actions;
-        }
     }
 
     /**

@@ -16,4 +16,6 @@
     <string name="title_activity_main_fragment">MainFragmentActivity</string>
     <string name="title_activity_test">Test</string>
     <string name="send_message">Send</string>
+    <string name="saved">saved</string>
+    <string name="error_save">Error during save</string>
 </resources>

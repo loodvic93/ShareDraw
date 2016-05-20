@@ -1,6 +1,5 @@
 package umlv.fr.sharedraw.http;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;

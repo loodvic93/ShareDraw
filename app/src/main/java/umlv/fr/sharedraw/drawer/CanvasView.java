@@ -8,19 +8,22 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Environment;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import umlv.fr.sharedraw.MainFragmentActivity;
 import umlv.fr.sharedraw.NotifyDraw;
+import umlv.fr.sharedraw.R;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Circle;
+import umlv.fr.sharedraw.drawer.tools.Clean;
 import umlv.fr.sharedraw.drawer.tools.Free;
 import umlv.fr.sharedraw.drawer.tools.Line;
 import umlv.fr.sharedraw.drawer.tools.Square;
@@ -42,8 +45,6 @@ public class CanvasView extends View {
     private Brush brushUsed;
     private Bitmap mBitmap;
     private Canvas mCanvas;
-
-
 
 
     public CanvasView(Context context) {
@@ -107,26 +108,33 @@ public class CanvasView extends View {
         invalidate();
     }
 
-    public void save() {
-        String path = Environment.getExternalStorageDirectory().getAbsolutePath();
-        System.out.println("PATH = " + path);
-        path = Environment.getDataDirectory().getAbsolutePath();
-        File file = new File(path+"/board.png");
-        FileOutputStream ostream;
-        try {
-            file.createNewFile();
-            ostream = new FileOutputStream(file);
-            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
-            ostream.flush();
-            ostream.close();
-            Toast.makeText(mContext, "image saved", Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(mContext, "error", Toast.LENGTH_LONG).show();
+    public void save(String name) {
+        File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "ShareDraw", name + ".txt");
+        File myDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) + File.separator + "ShareDraw");
+        Boolean success = true;
+        if (!myDir.exists()) {
+            success = myDir.mkdir();
+        }
+        if (success) {
+            try {
+                FileOutputStream output = new FileOutputStream(myFile, true);
+                String data= "Ce que je veux ecrire dans mon fichier \r\n";
+                output.write(data.getBytes());
+                //mBitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
+                Toast.makeText(mContext, name + " " + mContext.getString(R.string.saved), Toast.LENGTH_LONG).show();
+            } catch (IOException e) {
+                Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
         }
     }
 
     public void addBrush(Brush brush) {
+        if (brush instanceof Clean) {
+            clearCanvas();
+            return;
+        }
         brushes.add(brush);
     }
 
@@ -173,7 +181,9 @@ public class CanvasView extends View {
     protected void onDraw(Canvas canvas) {
         if (!brushes.isEmpty()) {
             for (Brush b : brushes) {
-                b.draw(canvas);
+                if (b != null) {
+                    b.draw(canvas);
+                }
             }
         } else {
             canvas.drawColor(Color.WHITE);

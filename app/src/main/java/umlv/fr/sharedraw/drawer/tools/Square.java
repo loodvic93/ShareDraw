@@ -74,22 +74,20 @@ public class Square implements Brush {
 
     @Override
     public String getJson() {
-        StringBuilder json = new StringBuilder();
-        json.append("{")
-                .append("\"draw\": {")
-                .append("\"shape\": \"square\",")
-                .append("\"x\":").append(x).append(",")
-                .append("\"y\":").append(y).append(",")
-                .append("\"x2\":").append(x2).append(",")
-                .append("\"y2\":")
-                .append(y2)
-                .append("},")
-                .append("\"options\": {")
-                .append("\"color\":").append(paint.getColor()).append(",")
-                .append("\"stroke\":")
-                .append((paint.getStyle() == Paint.Style.STROKE))
-                .append("}")
-                .append("}");
-        return json.toString();
+        return "{" +
+                "\"draw\": {" +
+                "\"shape\": \"square\"," +
+                "\"x\":" + x + "," +
+                "\"y\":" + y + "," +
+                "\"x2\":" + x2 + "," +
+                "\"y2\":" +
+                y2 +
+                "}," +
+                "\"options\": {" +
+                "\"color\":" + paint.getColor() + "," +
+                "\"stroke\":" +
+                (paint.getStyle() == Paint.Style.STROKE) +
+                "}" +
+                "}";
     }
 }

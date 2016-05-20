@@ -152,6 +152,6 @@ public class MainFragmentActivity extends AppCompatActivity {
             mUsername = intent.getStringExtra("username");
             mTitle = intent.getStringExtra("title");
         }
-        setTitle(mTitle);
+        setTitle(mTitle.replaceAll("_", " "));
     }
 }

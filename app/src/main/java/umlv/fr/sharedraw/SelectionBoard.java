@@ -1,6 +1,5 @@
 package umlv.fr.sharedraw;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,7 +16,6 @@ import android.support.v7.widget.SearchView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -138,7 +136,7 @@ public class SelectionBoard extends AppCompatActivity {
                         convertView = getLayoutInflater().inflate(R.layout.activity_selection_board_item_list_view, null);
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
-                    title.setText(getItem(position).name);
+                    title.setText(getItem(position).name.replaceAll("_", " "));
                     CircularTextView firstLetter = (CircularTextView) convertView.findViewById(R.id.firstLetter);
                     firstLetter.setBackgroundColor(Color.parseColor(getItem(position).color));
                     firstLetter.setText(getItem(position).name.substring(0, 1).toUpperCase());

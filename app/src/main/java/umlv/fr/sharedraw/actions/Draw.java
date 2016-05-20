@@ -10,7 +10,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Circle;
+import umlv.fr.sharedraw.drawer.tools.Clean;
 import umlv.fr.sharedraw.drawer.tools.Free;
 import umlv.fr.sharedraw.drawer.tools.Line;
 import umlv.fr.sharedraw.drawer.tools.Square;
@@ -51,8 +53,8 @@ public class Draw implements Action {
         return id;
     }
 
-    public umlv.fr.sharedraw.drawer.tools.Brush getBrush() {
-        umlv.fr.sharedraw.drawer.tools.Brush brush = null;
+    public Brush getBrush() {
+        Brush brush = null;
         try {
             JSONObject json = new JSONObject(message);
             JSONObject shape = json.getJSONObject("draw");
@@ -97,6 +99,9 @@ public class Draw implements Action {
                     options = json.getJSONObject("options");
                     color = options.getInt("color");
                     brush = new Free(points, color);
+                    break;
+                case "clean":
+                    brush = new Clean();
                     break;
                 default:
                     return null;

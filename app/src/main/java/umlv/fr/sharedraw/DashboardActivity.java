@@ -14,6 +14,7 @@ import android.widget.ImageButton;
 import java.util.ArrayList;
 import java.util.List;
 
+import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Draw;
 import umlv.fr.sharedraw.drawer.CanvasView;
 import umlv.fr.sharedraw.drawer.tools.Brush;
@@ -101,7 +102,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawer.save();
+                drawer.save(mTitle.replaceAll("_", " "));
             }
         });
 
@@ -110,6 +111,7 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
             @Override
             public void onClick(View v) {
                 drawer.clearCanvas();
+                notifyCleanCanvas();
             }
         });
 
@@ -266,10 +268,10 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
 
     @Override
     public void notifyServiceConnected() {
-        List<Draw> draws = MainFragmentActivity.HTTP_SERVICE.getListOfDrawAction();
+        List<Action> draws = MainFragmentActivity.HTTP_SERVICE.getListOfDrawAction();
         if (draws != null) {
-            for (Draw draw : draws) {
-                drawer.addBrush(draw.getBrush());
+            for (Action draw : draws) {
+                drawer.addBrush(((Draw)draw).getBrush());
             }
             drawer.invalidate();
         }
@@ -282,11 +284,16 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
         MainFragmentActivity.HTTP_SERVICE.postMessage(getString(R.string.server), mTitle, "&author=" + mUsername + "&message=" + brush.getJson());
     }
 
+    public void notifyCleanCanvas() {
+        MainFragmentActivity.HTTP_SERVICE.postMessage(getString(R.string.server), mTitle, "&author=" + mUsername + "&message={\"draw\":{\"shape\": \"clean\"}}");
+    }
+
     @Override
     public void notifyNewDraw(Brush brush) {
         if (brush == null) return;
         System.out.println("NOTIFY NEW DRAW = " + brush.getJson());
         drawer.addBrush(brush);
         drawer.invalidate();
+        MainFragmentActivity.HTTP_SERVICE.updateActions();
     }
 }
