@@ -90,11 +90,15 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
     }
 
     @Override
-    public void notifyUsers(Admin admin) {
-        connected.add(admin.getAuthor());
+    public void notifyUsers(final Admin admin) {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                if (admin.isJoining()) {
+                    arrayAdapter.add(admin.getAuthor());
+                } else {
+                    arrayAdapter.remove(admin.getAuthor());
+                }
                 arrayAdapter.notifyDataSetChanged();
             }
         });
