@@ -77,7 +77,6 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
             };
             lv.setAdapter(adapter);
             arrayAdapter = (ArrayAdapter<String>) adapter;
-            arrayAdapter.setNotifyOnChange(false);
         }
         arrayAdapter.clear();
         arrayAdapter.addAll(items);
@@ -93,6 +92,11 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
     @Override
     public void notifyUsers(Admin admin) {
         connected.add(admin.getAuthor());
-        arrayAdapter.add(admin.getAuthor());
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                arrayAdapter.notifyDataSetChanged();
+            }
+        });
     }
 }

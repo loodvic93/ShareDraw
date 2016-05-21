@@ -91,7 +91,6 @@ public class HttpService extends Service {
     }
 
     public void restartListener() {
-        System.out.println("SIZE ACTIONS = " + actions.get(Draw.class).size());
         scheduler = Executors.newScheduledThreadPool(1);
         executor = Executors.newFixedThreadPool(5);
         updateActions();
@@ -101,7 +100,7 @@ public class HttpService extends Service {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                System.out.println("RUN");
+                System.out.println("RUN, next id = " + nextID);
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
                     nextID++;

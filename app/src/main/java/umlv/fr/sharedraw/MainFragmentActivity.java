@@ -93,8 +93,14 @@ public class MainFragmentActivity extends AppCompatActivity {
     protected void onPause() {
         signalToQuitDashboard();
         HTTP_SERVICE.stopListener();
-        //unbindService(connection);
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindService(connection);
+        HTTP_SERVICE = null;
+        super.onDestroy();
     }
 
     @Override
