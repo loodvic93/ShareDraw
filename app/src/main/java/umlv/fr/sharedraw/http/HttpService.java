@@ -5,9 +5,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-
 import org.json.JSONArray;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +16,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Draw;
@@ -58,7 +55,6 @@ public class HttpService extends Service {
         nextID = intent.getIntExtra("nextId", 0);
         if (mDashboard != null && mServer != null) {
             try {
-                System.out.println("onBind NEXT ID = " + nextID);
                 if (nextID == 0) {
                     Thread thread = new Thread(new Runnable() {
                         @Override
@@ -110,7 +106,6 @@ public class HttpService extends Service {
         scheduler.scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
-                System.out.println("RUN, next id = " + nextID);
                 String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
                 if (response != null) {
                     nextID++;
@@ -120,7 +115,6 @@ public class HttpService extends Service {
         }, 0, 2, TimeUnit.SECONDS);
     }
 
-    @SuppressWarnings("unchecked")
     private void saveResponse(String response) {
         Action action = Proxy.createAction(response);
         if (action instanceof Admin) {
@@ -131,7 +125,6 @@ public class HttpService extends Service {
             }
             adminActionList.add(action);
             if (delegateAdmin != null) {
-                System.out.println("NOTIFY");
                 delegateAdmin.notifyUsers((Admin) action);
             }
         } else if (action instanceof Draw) {

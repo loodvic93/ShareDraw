@@ -1,7 +1,5 @@
 package umlv.fr.sharedraw;
 
-import android.database.DataSetObserver;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,6 +12,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import umlv.fr.sharedraw.actions.Admin;
@@ -21,8 +20,9 @@ import umlv.fr.sharedraw.notifier.NotifyAdmin;
 import umlv.fr.sharedraw.notifier.NotifyService;
 
 public class UserConnectedActivity extends Fragment implements NotifyService, NotifyAdmin {
+    private ArrayList<String> connected = new ArrayList<>();
     private ArrayAdapter<String> arrayAdapter;
-    private List<String> connected;
+
 
     public UserConnectedActivity() {
 
@@ -35,6 +35,7 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initVariable(savedInstanceState);
     }
 
     @Override
@@ -50,7 +51,12 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
         }
     }
 
-    @SuppressWarnings("all")
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putStringArrayList("connected", connected);
+    }
+
     private void initVariable(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             connected = savedInstanceState.getStringArrayList("connected");
@@ -85,7 +91,9 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
 
     @Override
     public void notifyServiceConnected() {
-        connected = MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected();
+        if (connected.isEmpty()) {
+            this.connected.addAll(MainFragmentActivity.HTTP_SERVICE.getListOfUsersConnected());
+        }
         updateAndSetAdapter(connected);
         MainFragmentActivity.HTTP_SERVICE.delegateAdminActivity(this);
     }
@@ -96,10 +104,10 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
             @Override
             public void run() {
                 if (admin.isJoining()) {
-                    Toast.makeText(getContext(), getString(R.string.is_connecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.is_connecting, admin.getAuthor().replaceAll("_", " ")), Toast.LENGTH_SHORT).show();
                     arrayAdapter.add(admin.getAuthor());
                 } else {
-                    Toast.makeText(getContext(), getString(R.string.is_disconnecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.is_disconnecting, admin.getAuthor().replaceAll("_", " ")), Toast.LENGTH_SHORT).show();
                     arrayAdapter.remove(admin.getAuthor());
                 }
                 arrayAdapter.notifyDataSetChanged();

@@ -46,7 +46,6 @@ public class CanvasView extends View {
     private Brush brushUsed;
     private Canvas mCanvas;
 
-
     public CanvasView(Context context) {
         super(context);
         this.mContext = context;
@@ -121,7 +120,7 @@ public class CanvasView extends View {
     public void save(String name) {
         File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw", name + ".bmp");
         if (myFile.exists()) {
-            if(!myFile.delete()) {
+            if (!myFile.delete()) {
                 Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -134,7 +133,7 @@ public class CanvasView extends View {
         if (success) {
             try {
                 FileOutputStream output = new FileOutputStream(myFile, true);
-                Bitmap  bitmap = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
+                Bitmap bitmap = Bitmap.createBitmap(this.getWidth(), this.getHeight(), Bitmap.Config.ARGB_8888);
                 Canvas canvas = new Canvas(bitmap);
                 this.draw(canvas);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
@@ -193,7 +192,6 @@ public class CanvasView extends View {
         }
     }
 
-    // override onDraw
     @Override
     protected void onDraw(Canvas canvas) {
         if (!brushes.isEmpty()) {
@@ -207,8 +205,6 @@ public class CanvasView extends View {
         }
     }
 
-
-    //override the onTouchEvent
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         float x = event.getX();
@@ -232,7 +228,6 @@ public class CanvasView extends View {
     }
 
 
-
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();
@@ -246,16 +241,12 @@ public class CanvasView extends View {
 
     @Override
     protected void onRestoreInstanceState(Parcelable state) {
-        if(!(state instanceof SavedState)) {
+        if (!(state instanceof SavedState)) {
             super.onRestoreInstanceState(state);
             return;
         }
-
-        SavedState ss = (SavedState)state;
+        SavedState ss = (SavedState) state;
         super.onRestoreInstanceState(ss.getSuperState());
-        //end
-
-
         this.brushes = ss.brushesToSave;
         this.mPaint = ss.paintToSave;
         this.brush = ss.brushToSave;
@@ -280,14 +271,12 @@ public class CanvasView extends View {
             paintToSave.setStrokeWidth(Brush.STROKE_WIDTH);
             paintToSave.setStyle((in.readByte() == 1) ? Paint.Style.STROKE : Paint.Style.FILL);
             paintToSave.setColor(in.readInt());
-
             int sizeBrushes = in.readInt();
             brushesToSave = new ArrayList<>();
             for (int i = 0; i < sizeBrushes; i++) {
                 Brush b = in.readParcelable(Brush.class.getClassLoader());
                 brushesToSave.add(b);
             }
-
             brushToSave = Brush.BrushType.valueOf(in.readString());
             brushUsedToSave = in.readParcelable(Brush.class.getClassLoader());
         }
@@ -305,12 +294,12 @@ public class CanvasView extends View {
             out.writeParcelable(brushUsedToSave, PARCELABLE_WRITE_RETURN_VALUE);
         }
 
-        //required field that makes Parcelables from a Parcel
         public static final Parcelable.Creator<SavedState> CREATOR =
                 new Parcelable.Creator<SavedState>() {
                     public SavedState createFromParcel(Parcel in) {
                         return new SavedState(in);
                     }
+
                     public SavedState[] newArray(int size) {
                         return new SavedState[size];
                     }

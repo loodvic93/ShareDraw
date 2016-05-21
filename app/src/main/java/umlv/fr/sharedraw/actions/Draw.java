@@ -1,4 +1,5 @@
 package umlv.fr.sharedraw.actions;
+
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
@@ -24,7 +25,8 @@ public class Draw implements Action {
     private String message;
     private int id;
 
-    private Draw() { }
+    private Draw() {
+    }
 
     static Draw createDrawAction(JSONObject jsonObject) {
         Draw draw = new Draw();
@@ -32,7 +34,7 @@ public class Draw implements Action {
             draw.id = jsonObject.getInt("id");
             draw.author = jsonObject.getString("author");
             draw.message = jsonObject.getJSONObject("message").toString();
-        }  catch (JSONException e) {
+        } catch (JSONException e) {
             Log.e(CLASS_NAME, "Error while read JSON message");
         }
         return draw;
@@ -62,29 +64,29 @@ public class Draw implements Action {
             switch (brushName) {
                 case "circle":
                     JSONArray center = shape.getJSONArray("center");
-                    float x = (float)center.getDouble(0);
-                    float y = (float)center.getDouble(1);
-                    float radius = (float)shape.getDouble("radius");
+                    float x = (float) center.getDouble(0);
+                    float y = (float) center.getDouble(1);
+                    float radius = (float) shape.getDouble("radius");
                     JSONObject options = json.getJSONObject("options");
                     int color = options.getInt("color");
                     boolean stroke = options.getBoolean("stroke");
                     brush = new Circle(x, y, radius, color, stroke);
                     break;
                 case "square":
-                    x = (float)shape.getDouble("x");
-                    y = (float)shape.getDouble("y");
-                    float x2 = (float)shape.getDouble("x2");
-                    float y2 = (float)shape.getDouble("y2");
+                    x = (float) shape.getDouble("x");
+                    y = (float) shape.getDouble("y");
+                    float x2 = (float) shape.getDouble("x2");
+                    float y2 = (float) shape.getDouble("y2");
                     options = json.getJSONObject("options");
                     color = options.getInt("color");
                     stroke = options.getBoolean("stroke");
                     brush = new Square(x, y, x2, y2, color, stroke);
                     break;
                 case "line":
-                    x = (float)shape.getDouble("x");
-                    y = (float)shape.getDouble("y");
-                    x2 = (float)shape.getDouble("x2");
-                    y2 = (float)shape.getDouble("y2");
+                    x = (float) shape.getDouble("x");
+                    y = (float) shape.getDouble("y");
+                    x2 = (float) shape.getDouble("x2");
+                    y2 = (float) shape.getDouble("y2");
                     options = json.getJSONObject("options");
                     color = options.getInt("color");
                     brush = new Line(x, y, x2, y2, color);
@@ -94,7 +96,7 @@ public class Draw implements Action {
                     List<Point> points = new ArrayList<>();
                     for (int i = 0; i < coordinates.length(); i++) {
                         JSONArray point = coordinates.getJSONArray(i);
-                        points.add(new Point((float)point.getDouble(0), (float)point.getDouble(1)));
+                        points.add(new Point((float) point.getDouble(0), (float) point.getDouble(1)));
                     }
                     options = json.getJSONObject("options");
                     color = options.getInt("color");

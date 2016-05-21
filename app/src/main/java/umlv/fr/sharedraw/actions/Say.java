@@ -14,7 +14,8 @@ public class Say implements Action {
     private int id;
     private long timestamp;
 
-    private Say() { }
+    private Say() {
+    }
 
     static Say createSayAction(JSONObject jsonObject) {
         Say say = new Say();
@@ -23,7 +24,7 @@ public class Say implements Action {
             say.author = jsonObject.getString("author");
             say.timestamp = jsonObject.getLong("timestamp");
             say.message = jsonObject.getJSONObject("message").toString();
-        }  catch (JSONException e) {
+        } catch (JSONException e) {
             Log.e(CLASS_NAME, "Error while read JSON message");
         }
         return say;

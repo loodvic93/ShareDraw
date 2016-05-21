@@ -1,7 +1,6 @@
 package umlv.fr.sharedraw.drawer.tools;
 
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -58,5 +57,6 @@ public class Clean implements Brush {
     public void writeToParcel(Parcel dest, int flags) {
     }
 
-    public Clean() {}
+    public Clean() {
+    }
 }

@@ -22,6 +22,7 @@ import java.util.Map;
 public class HttpRequest {
     private final static String CLASS_NAME = HttpRequest.class.getCanonicalName();
     private final Map<String, Method> methods = new HashMap<>();
+
     public HttpRequest() {
         for (Method m : HttpRequest.class.getDeclaredMethods()) {
             if (m.isAnnotationPresent(HttpRequestProperty.class)) {
@@ -35,32 +36,32 @@ public class HttpRequest {
      * Execute the HTTP Request
      *
      * @param params must be not null and must have this format: Method to call, parameters to give to the method
-     *            <br /><br />
-     *            Methods list to give in first argument to executor:<br />
-     *            <table>
-     *            <tr>
-     *            <th>Method</th>
-     *            <th>Arguments</th>
-     *            </tr>
-     *            <tr>
-     *            <td>getListOfDashboard</td>
-     *            <td>server : String</td>
-     *            </tr>
-     *            <tr>
-     *            <td>postMessage</td>
-     *            <td>server    : String</td>
-     *            <td>queueName : String</td>
-     *            <td>message   : JSON as String</td>
-     *            </tr>
-     *            <tr>
-     *            <td>getMessage</td>
-     *            <td>server         : String</td>
-     *            <td>queueName      : String</td>
-     *            <td>idMessage      : String</td>
-     *            <td>Timeout in sec : String</td>
-     *            </tr>
-     *            </table>
-     *            <br />
+     *               <br /><br />
+     *               Methods list to give in first argument to executor:<br />
+     *               <table>
+     *               <tr>
+     *               <th>Method</th>
+     *               <th>Arguments</th>
+     *               </tr>
+     *               <tr>
+     *               <td>getListOfDashboard</td>
+     *               <td>server : String</td>
+     *               </tr>
+     *               <tr>
+     *               <td>postMessage</td>
+     *               <td>server    : String</td>
+     *               <td>queueName : String</td>
+     *               <td>message   : JSON as String</td>
+     *               </tr>
+     *               <tr>
+     *               <td>getMessage</td>
+     *               <td>server         : String</td>
+     *               <td>queueName      : String</td>
+     *               <td>idMessage      : String</td>
+     *               <td>Timeout in sec : String</td>
+     *               </tr>
+     *               </table>
+     *               <br />
      */
     public String request(String... params) {
         Method m = methods.get(params[0]);

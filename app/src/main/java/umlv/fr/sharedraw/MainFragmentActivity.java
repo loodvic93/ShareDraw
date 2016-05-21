@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
@@ -31,14 +30,12 @@ public class MainFragmentActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             HttpService.HttpBinder binder = (HttpService.HttpBinder) service;
             HTTP_SERVICE = binder.getService();
-            if (mNextId == 0) {
-                signalToJoinDashboard();
-            }
+
+            signalToJoinDashboard();
 
             if (dashboardActivity != null) {
                 dashboardActivity.notifyServiceConnected();
             }
-
             if (userConnectedActivity != null) {
                 userConnectedActivity.notifyServiceConnected();
             }
@@ -53,8 +50,6 @@ public class MainFragmentActivity extends AppCompatActivity {
             HTTP_SERVICE = null;
         }
     };
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,11 +83,20 @@ public class MainFragmentActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onRestart() {
+        super.onRestart();
+        signalToJoinDashboard();
+    }
+
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("username", mUsername);
         outState.putString("title", mTitle);
         outState.putInt("nextId", HTTP_SERVICE.getNextID());
+        getSupportFragmentManager().putFragment(outState, "dashboardActivity", dashboardActivity);
+        getSupportFragmentManager().putFragment(outState, "userConnectedActivity", userConnectedActivity);
+        //getSupportFragmentManager().putFragment(outState, "messageActivity", messageActivity);
     }
 
     @Override
@@ -106,16 +110,13 @@ public class MainFragmentActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
+        System.out.println("ON DESTROY");
         unbindService(connection);
         HTTP_SERVICE = null;
         super.onDestroy();
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        System.out.println("onConfigurationChanged");
-        super.onConfigurationChanged(newConfig);
-    }
+
 
     @Override
     protected void onResume() {
@@ -127,6 +128,7 @@ public class MainFragmentActivity extends AppCompatActivity {
             intent.putExtra("nextId", mNextId);
             bindService(intent, connection, Context.BIND_AUTO_CREATE);
         } else {
+            System.out.println("HTTP_SERVICE = " + HTTP_SERVICE);
             HTTP_SERVICE.restartListener();
         }
         super.onResume();
@@ -171,10 +173,14 @@ public class MainFragmentActivity extends AppCompatActivity {
 
     @SuppressWarnings("all")
     private void initVariable(Bundle savedInstanceState) {
+        System.out.println("initVariable");
         if (savedInstanceState != null) {
             mUsername = savedInstanceState.getString("username");
             mTitle = savedInstanceState.getString("title");
             mNextId = savedInstanceState.getInt("nextId");
+            userConnectedActivity = (UserConnectedActivity) getSupportFragmentManager().getFragment(savedInstanceState, "userConnectedActivity");
+            dashboardActivity = (DashboardActivity) getSupportFragmentManager().getFragment(savedInstanceState, "dashboardActivity");
+            //messageActivity = (MessageActivity) getSupportFragmentManager().getFragment(savedInstanceState, "messageActivity");
         } else {
             Intent intent = getIntent();
             mUsername = intent.getStringExtra("username");

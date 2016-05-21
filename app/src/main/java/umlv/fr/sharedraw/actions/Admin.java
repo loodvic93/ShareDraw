@@ -14,7 +14,8 @@ public class Admin implements Action {
     private boolean joining;
     private int id;
 
-    private Admin() { }
+    private Admin() {
+    }
 
     static Admin createAdminAction(JSONObject jsonObject) {
         Admin admin = new Admin();
@@ -23,7 +24,7 @@ public class Admin implements Action {
             admin.author = jsonObject.getString("author");
             admin.message = jsonObject.getJSONObject("message").toString();
             admin.joining = jsonObject.getJSONObject("message").getString("admin").equalsIgnoreCase("join");
-        }  catch (JSONException e) {
+        } catch (JSONException e) {
             Log.e(CLASS_NAME, "Error while read JSON message");
         }
         return admin;

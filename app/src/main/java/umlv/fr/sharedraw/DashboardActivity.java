@@ -11,7 +11,6 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import umlv.fr.sharedraw.actions.Action;
@@ -59,7 +58,6 @@ public class DashboardActivity extends Fragment implements NotifyService, Notify
 
         drawer = (CanvasView) getActivity().findViewById(R.id.canvas);
         drawer.delegate(this);
-
 
         getActivity().findViewById(R.id.palette).setOnTouchListener(new View.OnTouchListener() {
             @Override
