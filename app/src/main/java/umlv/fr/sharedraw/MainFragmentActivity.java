@@ -110,7 +110,6 @@ public class MainFragmentActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        System.out.println("ON DESTROY");
         unbindService(connection);
         HTTP_SERVICE = null;
         super.onDestroy();
@@ -120,7 +119,6 @@ public class MainFragmentActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
-        System.out.println("ON RESUME");
         if (HTTP_SERVICE == null) {
             Intent intent = new Intent(this, HttpService.class);
             intent.putExtra("server", getString(R.string.server));
@@ -128,7 +126,6 @@ public class MainFragmentActivity extends AppCompatActivity {
             intent.putExtra("nextId", mNextId);
             bindService(intent, connection, Context.BIND_AUTO_CREATE);
         } else {
-            System.out.println("HTTP_SERVICE = " + HTTP_SERVICE);
             HTTP_SERVICE.restartListener();
         }
         super.onResume();
@@ -144,7 +141,6 @@ public class MainFragmentActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            System.out.println("GET ITEM = " + position);
             switch (position) {
                 case 0:
                     dashboardActivity = DashboardActivity.newInstance(mTitle, mUsername);
@@ -173,7 +169,6 @@ public class MainFragmentActivity extends AppCompatActivity {
 
     @SuppressWarnings("all")
     private void initVariable(Bundle savedInstanceState) {
-        System.out.println("initVariable");
         if (savedInstanceState != null) {
             mUsername = savedInstanceState.getString("username");
             mTitle = savedInstanceState.getString("title");

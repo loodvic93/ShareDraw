@@ -7,6 +7,12 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
+
 public class Say implements Action {
     private static final String CLASS_NAME = Say.class.getCanonicalName();
     private String author;
@@ -22,7 +28,7 @@ public class Say implements Action {
         try {
             say.id = jsonObject.getInt("id");
             say.author = jsonObject.getString("author");
-            say.timestamp = jsonObject.getLong("timestamp");
+            say.timestamp = jsonObject.getLong("timestamp") * 1000;
             say.message = jsonObject.getJSONObject("message").toString();
         } catch (JSONException e) {
             Log.e(CLASS_NAME, "Error while read JSON message");
@@ -49,11 +55,29 @@ public class Say implements Action {
     public String getContent() {
         try {
             JSONObject say = new JSONObject(message);
-            return say.getString("content");
+            JSONObject data = say.getJSONObject("say");
+            return data.getString("content");
         } catch (JSONException e) {
             Log.e(CLASS_NAME, "Cannot read JSON");
             return null;
         }
+    }
+
+    public String getTime() {
+        Date dateMessage = new Date(timestamp);
+        Date today = new Date();
+        Calendar cal1 = Calendar.getInstance();
+        Calendar cal2 = Calendar.getInstance();
+        cal1.setTime(dateMessage);
+        cal2.setTime(today);
+        boolean sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+                cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
+
+        String format = (sameDay) ?  "HH:mm" : "dd/MM";
+
+        DateFormat formatter = new SimpleDateFormat(format);
+
+        return formatter.format(dateMessage);
     }
 
     @SuppressWarnings("rawtypes")

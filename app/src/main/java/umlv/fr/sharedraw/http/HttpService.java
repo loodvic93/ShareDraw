@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+
 import org.json.JSONArray;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import umlv.fr.sharedraw.actions.Action;
 import umlv.fr.sharedraw.actions.Admin;
 import umlv.fr.sharedraw.actions.Draw;
@@ -25,15 +28,16 @@ import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Clean;
 import umlv.fr.sharedraw.notifier.NotifyAdmin;
 import umlv.fr.sharedraw.notifier.NotifyDraw;
+import umlv.fr.sharedraw.notifier.NotifyMessage;
 
 public class HttpService extends Service {
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final static String CLASS_NAME = HttpService.class.getCanonicalName();
     private final Map<Class<?>, List<Action>> actions = new HashMap<>();
-    private ExecutorService executor = Executors.newFixedThreadPool(5);
     private final HttpRequest request = new HttpRequest();
     private NotifyDraw delegateDrawer = null;
     private NotifyAdmin delegateAdmin = null;
+    private NotifyMessage delegateSay = null;
     private volatile int nextID = 0;
     private String mDashboard;
     private String mServer;
@@ -49,7 +53,6 @@ public class HttpService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        System.out.println("ON BIND");
         mServer = intent.getStringExtra("server");
         mDashboard = intent.getStringExtra("title");
         nextID = intent.getIntExtra("nextId", 0);
@@ -82,19 +85,16 @@ public class HttpService extends Service {
     @Override
     public boolean onUnbind(Intent intent) {
         scheduler.shutdownNow();
-        executor.shutdown();
         return super.onUnbind(intent);
     }
 
 
     public void stopListener() {
         scheduler.shutdownNow();
-        executor.shutdown();
     }
 
     public void restartListener() {
         scheduler = Executors.newScheduledThreadPool(1);
-        executor = Executors.newFixedThreadPool(5);
         updateActions();
     }
 
@@ -112,7 +112,7 @@ public class HttpService extends Service {
                     saveResponse(response);
                 }
             }
-        }, 0, 2, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     private void saveResponse(String response) {
@@ -150,6 +150,9 @@ public class HttpService extends Service {
                 actions.put(Say.class, sayActionList);
             }
             sayActionList.add(action);
+            if (delegateSay != null) {
+                delegateSay.notifyMessageReceive((Say) action);
+            }
         }
     }
 
@@ -162,6 +165,7 @@ public class HttpService extends Service {
      * @return List of string name of dashboard
      */
     public List<String> getListOfDashboard(final String server) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<String> callable = new Callable<String>() {
             @Override
             public String call() throws Exception {
@@ -177,6 +181,7 @@ public class HttpService extends Service {
             }
             return dashboards;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
 
@@ -206,6 +211,25 @@ public class HttpService extends Service {
     }
 
     /**
+     * Used if service update automatically data
+     *
+     * @return List of all users connected on current dashboard
+     */
+    @SuppressWarnings("unchecked")
+    public List<Say> getListOfMessages() {
+        List<Say> messages = new ArrayList<>();
+        if (mDashboard != null && mServer != null) {
+            List<Action> actionList = actions.get(Say.class);
+            if (actionList != null) {
+                for (Action say : actionList) {
+                    messages.add((Say) say);
+                }
+            }
+        }
+        return messages;
+    }
+
+    /**
      * Used only if service update automatically data
      *
      * @return List of all DRAW ACTIONS
@@ -226,10 +250,34 @@ public class HttpService extends Service {
      * @param message   Message in JSON format
      */
     public void postMessage(final String server, final String dashboard, final String message) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         Callable<String> callable = new Callable<String>() {
             @Override
             public String call() throws Exception {
                 nextID++;
+                return request.request("postMessage", server, dashboard, message);
+            }
+        };
+        try {
+            executor.submit(callable);
+        } catch (Exception e) {
+            // Do Nothing
+        }
+    }
+
+    /**
+     * Post a message to server and return its id
+     *
+     * @param server    IP Address of server
+     * @param dashboard Name of dashboard
+     * @param message   Message in JSON format
+     */
+    public void postMessage(final String server, final String dashboard, final String message, final boolean ignored) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<String> callable = new Callable<String>() {
+            @Override
+            public String call() throws Exception {
+                if (ignored) nextID++;
                 return request.request("postMessage", server, dashboard, message);
             }
         };
@@ -268,5 +316,9 @@ public class HttpService extends Service {
 
     public void delegateAdminActivity(NotifyAdmin delegate) {
         this.delegateAdmin = delegate;
+    }
+
+    public void delegateSayActivity(NotifyMessage delegate) {
+        this.delegateSay = delegate;
     }
 }

@@ -79,19 +79,17 @@ public class SelectionBoard extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        System.out.println("SAVE");
         outState.putParcelableArrayList("dashboards", dashboards);
 
     }
 
-    private final ServiceConnection connection = new ServiceConnection() {
+    private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             HttpBinder binder = (HttpBinder) service;
             httpService = binder.getService();
-            if (dashboards.isEmpty()) {
-                getListOfDashboard();
-            }
+            System.out.println(httpService.getListOfDashboard(getString(R.string.server)));
+            getListOfDashboard();
         }
 
         @Override
@@ -110,6 +108,7 @@ public class SelectionBoard extends AppCompatActivity {
     @Override
     protected void onPause() {
         unbindService(connection);
+        httpService = null;
         super.onPause();
     }
 
@@ -238,7 +237,7 @@ public class SelectionBoard extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 EditText title = (EditText) dialogView.findViewById(R.id.title);
                 EditText userName = (EditText) dialogView.findViewById(R.id.userName);
-                launchNextActivity(userName.getText().toString().replaceAll(" ", "_"), title.getText().toString().replaceAll(" ", "_"));
+                launchNextActivity(userName.getText().toString(), title.getText().toString().replaceAll(" ", "_"));
             }
         });
 
