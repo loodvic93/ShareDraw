@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -95,8 +96,10 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
             @Override
             public void run() {
                 if (admin.isJoining()) {
+                    Toast.makeText(getContext(), getString(R.string.is_connecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
                     arrayAdapter.add(admin.getAuthor());
                 } else {
+                    Toast.makeText(getContext(), getString(R.string.is_disconnecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
                     arrayAdapter.remove(admin.getAuthor());
                 }
                 arrayAdapter.notifyDataSetChanged();

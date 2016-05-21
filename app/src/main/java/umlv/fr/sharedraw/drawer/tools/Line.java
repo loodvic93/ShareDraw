@@ -2,9 +2,11 @@ package umlv.fr.sharedraw.drawer.tools;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class Line implements Brush {
-    private final Paint paint;
+    private Paint paint;
     private float x;
     private float y;
     private float x2;
@@ -70,5 +72,46 @@ public class Line implements Brush {
                 paint.getColor() +
                 "}" +
                 "}";
+    }
+
+
+    @SuppressWarnings("rawtypes")
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public Line createFromParcel(Parcel in) {
+            return new Line(in);
+        }
+
+        @Override
+        public Object[] newArray(int size) {
+            return null;
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(paint.getColor());
+        dest.writeFloat(x);
+        dest.writeFloat(y);
+        dest.writeFloat(x2);
+        dest.writeFloat(y2);
+    }
+
+    private Line(Parcel in) {
+        this.getFromParcel(in);
+    }
+
+    private void getFromParcel(Parcel in) {
+        this.paint = new Paint();
+        paint.setStrokeWidth(STROKE_WIDTH);
+        paint.setColor(in.readInt());
+        this.x = in.readInt();
+        this.y = in.readInt();
+        this.x2 = in.readInt();
+        this.y2 = in.readInt();
     }
 }

@@ -52,23 +52,28 @@ public class HttpService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+        System.out.println("ON BIND");
         mServer = intent.getStringExtra("server");
         mDashboard = intent.getStringExtra("title");
+        nextID = intent.getIntExtra("nextId", 0);
         if (mDashboard != null && mServer != null) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
-                    while (response != null) {
-                        saveResponse(response);
-                        nextID++;
-                        response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
-                    }
-                }
-            });
-            thread.start();
             try {
-                thread.join();
+                System.out.println("onBind NEXT ID = " + nextID);
+                if (nextID == 0) {
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
+                            while (response != null) {
+                                saveResponse(response);
+                                nextID++;
+                                response = request.request("getMessage", mServer, mDashboard, Integer.toString(nextID), Integer.toString(0));
+                            }
+                        }
+                    });
+                    thread.start();
+                    thread.join();
+                }
                 updateActions();
             } catch (InterruptedException e) {
                 Log.e(CLASS_NAME, "Cannot get previous actions");
@@ -85,6 +90,7 @@ public class HttpService extends Service {
         return super.onUnbind(intent);
     }
 
+
     public void stopListener() {
         scheduler.shutdownNow();
         executor.shutdown();
@@ -94,6 +100,10 @@ public class HttpService extends Service {
         scheduler = Executors.newScheduledThreadPool(1);
         executor = Executors.newFixedThreadPool(5);
         updateActions();
+    }
+
+    public int getNextID() {
+        return nextID;
     }
 
     public void updateActions() {
@@ -113,7 +123,7 @@ public class HttpService extends Service {
     @SuppressWarnings("unchecked")
     private void saveResponse(String response) {
         Action action = Proxy.createAction(response);
-        if (action instanceof  Admin) {
+        if (action instanceof Admin) {
             List<Action> adminActionList = actions.get(Admin.class);
             if (adminActionList == null) {
                 adminActionList = new ArrayList<>();
@@ -130,7 +140,7 @@ public class HttpService extends Service {
                 drawActionList = new ArrayList<>();
                 actions.put(Draw.class, drawActionList);
             }
-            Draw draw = (Draw)action;
+            Draw draw = (Draw) action;
             Brush brush = draw.getBrush();
             if (brush instanceof Clean) {
                 drawActionList.clear();

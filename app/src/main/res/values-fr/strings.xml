@@ -8,4 +8,12 @@
     <string name="selection_board_new_dashboard_validate">Valider</string>
     <string name="selection_board_new_dashboard_cancel">Annuler</string>
     <string name="search">Rechercher</string>
+    <string name="tab1">Tableau</string>
+    <string name="tab2">Connectés</string>
+    <string name="tab3">Messages</string>
+    <string name="send_message">Envoyer</string>
+    <string name="saved">%1$s enregistré!</string>
+    <string name="error_save">Une erreur est survenue pendant l\'enregistrement</string>
+    <string name="is_connecting">%1$s est maintenant connecté!</string>
+    <string name="is_disconnecting">%1$s est maintenant déconnecté!</string>
 </resources>

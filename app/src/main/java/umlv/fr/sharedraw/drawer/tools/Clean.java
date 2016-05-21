@@ -1,6 +1,9 @@
 package umlv.fr.sharedraw.drawer.tools;
 
 import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 public class Clean implements Brush {
     @Override
@@ -33,4 +36,27 @@ public class Clean implements Brush {
         // Do nothing
         return null;
     }
+
+    @SuppressWarnings("rawtypes")
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {
+        public Clean createFromParcel(Parcel in) {
+            return new Clean();
+        }
+
+        @Override
+        public Object[] newArray(int size) {
+            return null;
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+    }
+
+    public Clean() {}
 }

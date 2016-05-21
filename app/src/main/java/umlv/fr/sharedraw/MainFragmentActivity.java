@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.TabLayout;
@@ -23,13 +24,16 @@ public class MainFragmentActivity extends AppCompatActivity {
     public static HttpService HTTP_SERVICE;
     public static String mUsername;
     public static String mTitle;
+    private int mNextId = 0;
 
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
             HttpService.HttpBinder binder = (HttpService.HttpBinder) service;
             HTTP_SERVICE = binder.getService();
-            signalToJoinDashboard();
+            if (mNextId == 0) {
+                signalToJoinDashboard();
+            }
 
             if (dashboardActivity != null) {
                 dashboardActivity.notifyServiceConnected();
@@ -49,6 +53,7 @@ public class MainFragmentActivity extends AppCompatActivity {
             HTTP_SERVICE = null;
         }
     };
+
 
 
     @Override
@@ -87,13 +92,16 @@ public class MainFragmentActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putString("username", mUsername);
         outState.putString("title", mTitle);
+        outState.putInt("nextId", HTTP_SERVICE.getNextID());
     }
 
     @Override
-    protected void onPause() {
-        signalToQuitDashboard();
-        HTTP_SERVICE.stopListener();
-        super.onPause();
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (!hasFocus) {
+            signalToQuitDashboard();
+            HTTP_SERVICE.stopListener();
+        }
+        super.onWindowFocusChanged(hasFocus);
     }
 
     @Override
@@ -104,11 +112,19 @@ public class MainFragmentActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        System.out.println("onConfigurationChanged");
+        super.onConfigurationChanged(newConfig);
+    }
+
+    @Override
     protected void onResume() {
+        System.out.println("ON RESUME");
         if (HTTP_SERVICE == null) {
             Intent intent = new Intent(this, HttpService.class);
             intent.putExtra("server", getString(R.string.server));
             intent.putExtra("title", mTitle);
+            intent.putExtra("nextId", mNextId);
             bindService(intent, connection, Context.BIND_AUTO_CREATE);
         } else {
             HTTP_SERVICE.restartListener();
@@ -158,6 +174,7 @@ public class MainFragmentActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             mUsername = savedInstanceState.getString("username");
             mTitle = savedInstanceState.getString("title");
+            mNextId = savedInstanceState.getInt("nextId");
         } else {
             Intent intent = getIntent();
             mUsername = intent.getStringExtra("username");

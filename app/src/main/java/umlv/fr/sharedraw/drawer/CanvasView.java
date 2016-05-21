@@ -7,6 +7,8 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.os.Environment;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,7 +20,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import umlv.fr.sharedraw.notifier.NotifyDraw;
 import umlv.fr.sharedraw.R;
 import umlv.fr.sharedraw.drawer.tools.Brush;
 import umlv.fr.sharedraw.drawer.tools.Circle;
@@ -26,6 +27,7 @@ import umlv.fr.sharedraw.drawer.tools.Clean;
 import umlv.fr.sharedraw.drawer.tools.Free;
 import umlv.fr.sharedraw.drawer.tools.Line;
 import umlv.fr.sharedraw.drawer.tools.Square;
+import umlv.fr.sharedraw.notifier.NotifyDraw;
 
 /**
  * Permit to draw on screen
@@ -39,10 +41,9 @@ public class CanvasView extends View {
     private NotifyDraw delegate = null;
     private final Context mContext;
     private boolean stroke = true;
-    private final Paint mPaint;
+    private Paint mPaint;
     private final Path mPath;
     private Brush brushUsed;
-    private Bitmap mBitmap;
     private Canvas mCanvas;
 
 
@@ -85,7 +86,7 @@ public class CanvasView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int old_width, int old_height) {
         super.onSizeChanged(w, h, old_width, old_height);
-        mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        Bitmap mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
     }
 
@@ -120,7 +121,10 @@ public class CanvasView extends View {
     public void save(String name) {
         File myFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw", name + ".bmp");
         if (myFile.exists()) {
-            myFile.delete();
+            if(!myFile.delete()) {
+                Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
         File myDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + "ShareDraw");
         Boolean success = true;
@@ -134,7 +138,7 @@ public class CanvasView extends View {
                 Canvas canvas = new Canvas(bitmap);
                 this.draw(canvas);
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-                Toast.makeText(mContext, name + " " + mContext.getString(R.string.saved), Toast.LENGTH_LONG).show();
+                Toast.makeText(mContext, mContext.getString(R.string.saved, name), Toast.LENGTH_LONG).show();
             } catch (IOException e) {
                 Toast.makeText(mContext, mContext.getString(R.string.error_save), Toast.LENGTH_SHORT).show();
             }
@@ -225,5 +229,91 @@ public class CanvasView extends View {
                 break;
         }
         return true;
+    }
+
+
+
+    @Override
+    protected Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState ss = new SavedState(superState);
+        ss.brushesToSave = brushes;
+        ss.paintToSave = mPaint;
+        ss.brushToSave = brush;
+        ss.brushUsedToSave = brushUsed;
+        return ss;
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Parcelable state) {
+        if(!(state instanceof SavedState)) {
+            super.onRestoreInstanceState(state);
+            return;
+        }
+
+        SavedState ss = (SavedState)state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        //end
+
+
+        this.brushes = ss.brushesToSave;
+        this.mPaint = ss.paintToSave;
+        this.brush = ss.brushToSave;
+        this.brushUsed = ss.brushUsedToSave;
+    }
+
+    static class SavedState extends BaseSavedState {
+        Paint paintToSave;
+        List<Brush> brushesToSave;
+        Brush.BrushType brushToSave;
+        Brush brushUsedToSave;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in) {
+            super(in);
+            paintToSave = new Paint();
+            paintToSave.setAntiAlias(true);
+            paintToSave.setStrokeJoin(Paint.Join.ROUND);
+            paintToSave.setStrokeWidth(Brush.STROKE_WIDTH);
+            paintToSave.setStyle((in.readByte() == 1) ? Paint.Style.STROKE : Paint.Style.FILL);
+            paintToSave.setColor(in.readInt());
+
+            int sizeBrushes = in.readInt();
+            brushesToSave = new ArrayList<>();
+            for (int i = 0; i < sizeBrushes; i++) {
+                Brush b = in.readParcelable(Brush.class.getClassLoader());
+                brushesToSave.add(b);
+            }
+
+            brushToSave = Brush.BrushType.valueOf(in.readString());
+            brushUsedToSave = in.readParcelable(Brush.class.getClassLoader());
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeByte((byte) ((paintToSave.getStyle() == Paint.Style.STROKE) ? 1 : 0));
+            out.writeInt(paintToSave.getColor());
+            out.writeInt(brushesToSave.size());
+            for (Brush b : brushesToSave) {
+                out.writeParcelable(b, PARCELABLE_WRITE_RETURN_VALUE);
+            }
+            out.writeString(brushToSave.name());
+            out.writeParcelable(brushUsedToSave, PARCELABLE_WRITE_RETURN_VALUE);
+        }
+
+        //required field that makes Parcelables from a Parcel
+        public static final Parcelable.Creator<SavedState> CREATOR =
+                new Parcelable.Creator<SavedState>() {
+                    public SavedState createFromParcel(Parcel in) {
+                        return new SavedState(in);
+                    }
+                    public SavedState[] newArray(int size) {
+                        return new SavedState[size];
+                    }
+                };
     }
 }

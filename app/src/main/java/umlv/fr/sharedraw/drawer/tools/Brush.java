@@ -1,8 +1,9 @@
 package umlv.fr.sharedraw.drawer.tools;
 
 import android.graphics.Canvas;
+import android.os.Parcelable;
 
-public interface Brush {
+public interface Brush extends Parcelable{
     enum BrushType {LINE, CIRCLE, SQUARE, FREE}
     int FAULT_TOLERANT = 5;
     int STROKE_WIDTH = 25;
