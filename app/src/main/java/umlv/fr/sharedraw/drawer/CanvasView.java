@@ -272,8 +272,6 @@ public class CanvasView extends View {
     }
 
 
-
-
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable superState = super.onSaveInstanceState();

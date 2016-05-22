@@ -15,8 +15,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +25,6 @@ import umlv.fr.sharedraw.notifier.NotifyService;
 public class MessageActivity extends Fragment implements NotifyService, NotifyMessage {
     private ArrayList<Say> messages = new ArrayList<>();
     private ArrayAdapter<Say> arrayAdapter;
-
 
     public MessageActivity() {
 

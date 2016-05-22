@@ -74,7 +74,6 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
                     if (convertView == null) {
-
                         convertView = getActivity().getLayoutInflater().inflate(R.layout.activity_user_connected_item_list_view, null);
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);

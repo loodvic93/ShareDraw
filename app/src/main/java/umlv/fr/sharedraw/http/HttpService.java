@@ -192,7 +192,6 @@ public class HttpService extends Service {
      *
      * @return List of all users connected on current dashboard
      */
-    @SuppressWarnings("unchecked")
     public List<String> getListOfUsersConnected() {
         List<String> users = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
@@ -215,7 +214,6 @@ public class HttpService extends Service {
      *
      * @return List of all users connected on current dashboard
      */
-    @SuppressWarnings("unchecked")
     public List<Say> getListOfMessages() {
         List<Say> messages = new ArrayList<>();
         if (mDashboard != null && mServer != null) {
@@ -234,7 +232,6 @@ public class HttpService extends Service {
      *
      * @return List of all DRAW ACTIONS
      */
-    @SuppressWarnings("unchecked")
     public List<Action> getListOfDrawAction() {
         if (mServer != null && mDashboard != null) {
             return actions.get(Draw.class);

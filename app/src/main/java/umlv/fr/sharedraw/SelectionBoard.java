@@ -8,8 +8,6 @@ import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
@@ -56,7 +54,7 @@ public class SelectionBoard extends AppCompatActivity {
         listViewBoard.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                String title = dashboards.get(position).name;
+                String title = dashboards.get(position).getName();
                 createAndLaunchDialogBox(title);
             }
         });
@@ -130,7 +128,7 @@ public class SelectionBoard extends AppCompatActivity {
         Collections.sort(dashboards, new Comparator<Dashboard>() {
             @Override
             public int compare(Dashboard lhs, Dashboard rhs) {
-                return lhs.name.compareToIgnoreCase(rhs.name);
+                return lhs.getName().compareToIgnoreCase(rhs.getName());
             }
         });
         updateAndSetAdapter(dashboards);
@@ -151,10 +149,10 @@ public class SelectionBoard extends AppCompatActivity {
                         convertView = getLayoutInflater().inflate(R.layout.activity_selection_board_item_list_view, null);
                     }
                     TextView title = (TextView) convertView.findViewById(R.id.title);
-                    title.setText(getItem(position).name.replaceAll("_", " "));
+                    title.setText(getItem(position).getName().replaceAll("_", " "));
                     CircularTextView firstLetter = (CircularTextView) convertView.findViewById(R.id.firstLetter);
-                    firstLetter.setBackgroundColor(Color.parseColor(getItem(position).color));
-                    firstLetter.setText(getItem(position).name.substring(0, 1).toUpperCase());
+                    firstLetter.setBackgroundColor(Color.parseColor(getItem(position).getColor()));
+                    firstLetter.setText(getItem(position).getName().substring(0, 1).toUpperCase());
                     return convertView;
                 }
             };
@@ -180,7 +178,7 @@ public class SelectionBoard extends AppCompatActivity {
                     return false;
                 }
                 for (Dashboard dashboard : dashboards) {
-                    if (dashboard.name.toLowerCase().contains(query.toLowerCase())) {
+                    if (dashboard.getName().toLowerCase().contains(query.toLowerCase())) {
                         filterDashboard.add(dashboard);
                     }
                 }
@@ -197,7 +195,7 @@ public class SelectionBoard extends AppCompatActivity {
                     return false;
                 }
                 for (Dashboard dashboard : dashboards) {
-                    if (dashboard.name.toLowerCase().contains(newText.toLowerCase())) {
+                    if (dashboard.getName().toLowerCase().contains(newText.toLowerCase())) {
                         filterDashboard.add(dashboard);
                     }
                 }
@@ -314,60 +312,5 @@ public class SelectionBoard extends AppCompatActivity {
         intent.putExtra("username", username);
         intent.putExtra("title", title);
         startActivity(intent);
-    }
-
-    private static class Dashboard implements Parcelable {
-        private final String name;
-        private final String color;
-
-        Dashboard(String name, String color) {
-            this.name = name;
-            this.color = color;
-        }
-
-        protected Dashboard(Parcel in) {
-            name = in.readString();
-            color = in.readString();
-        }
-
-        @SuppressWarnings("unused")
-        public static final Creator<Dashboard> CREATOR = new Creator<Dashboard>() {
-            @Override
-            public Dashboard createFromParcel(Parcel in) {
-                return new Dashboard(in);
-            }
-
-            @Override
-            public Dashboard[] newArray(int size) {
-                return new Dashboard[size];
-            }
-        };
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Dashboard dashboard = (Dashboard) o;
-
-            return name != null ? name.equals(dashboard.name) : dashboard.name == null;
-
-        }
-
-        @Override
-        public int hashCode() {
-            return name != null ? name.hashCode() : 0;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
-        }
-
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            dest.writeString(name);
-            dest.writeString(color);
-        }
     }
 }

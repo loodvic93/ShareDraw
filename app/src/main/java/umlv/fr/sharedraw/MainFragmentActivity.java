@@ -117,8 +117,6 @@ public class MainFragmentActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-
-
     @Override
     protected void onResume() {
         if (HTTP_SERVICE == null) {
@@ -169,7 +167,6 @@ public class MainFragmentActivity extends AppCompatActivity {
         }
     }
 
-    @SuppressWarnings("all")
     private void initVariable(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             mUsername = savedInstanceState.getString("username");

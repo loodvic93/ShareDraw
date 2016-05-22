@@ -72,7 +72,7 @@ public class Say implements Action {
         boolean sameDay = cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
                 cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR);
 
-        String format = (sameDay) ?  "HH:mm" : "dd/MM";
+        String format = (sameDay) ? "HH:mm" : "dd/MM";
 
         DateFormat formatter = new SimpleDateFormat(format);
 
