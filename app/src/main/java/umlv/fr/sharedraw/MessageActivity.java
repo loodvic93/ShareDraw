@@ -79,7 +79,7 @@ public class MessageActivity extends Fragment implements NotifyService, NotifyMe
     @SuppressWarnings("all")
     private void updateAndSetAdapter(List<Say> items) {
         ListView lv = (ListView) getActivity().findViewById(R.id.listView_Message);
-        assert lv != null;
+        if (lv == null) return;
 
         ListAdapter adapter = lv.getAdapter();
         if (adapter == null) {

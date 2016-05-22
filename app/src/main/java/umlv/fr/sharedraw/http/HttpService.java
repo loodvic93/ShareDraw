@@ -198,9 +198,9 @@ public class HttpService extends Service {
             List<Action> actionList = actions.get(Admin.class);
             if (actionList != null) {
                 for (Action admin : actionList) {
-                    if (((Admin) admin).isJoining()) {
+                    if (((Admin) admin).isJoining() && !users.contains(admin.getAuthor())) {
                         users.add(admin.getAuthor());
-                    } else {
+                    } else if (!((Admin)admin).isJoining()){
                         users.remove(admin.getAuthor());
                     }
                 }

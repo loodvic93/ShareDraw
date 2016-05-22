@@ -83,12 +83,6 @@ public class MainFragmentActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onRestart() {
-        super.onRestart();
-        signalToJoinDashboard();
-    }
-
-    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString("username", mUsername);
@@ -115,6 +109,12 @@ public class MainFragmentActivity extends AppCompatActivity {
         unbindService(connection);
         HTTP_SERVICE = null;
         super.onDestroy();
+    }
+
+    @Override
+    protected void onRestart() {
+        signalToJoinDashboard();
+        super.onRestart();
     }
 
     @Override

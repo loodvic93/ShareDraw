@@ -94,8 +94,10 @@ public class CanvasView extends View {
     @Override
     protected void onSizeChanged(int w, int h, int old_width, int old_height) {
         super.onSizeChanged(w, h, old_width, old_height);
-        Bitmap mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        mCanvas = new Canvas(mBitmap);
+        if (w > 0 && h > 0) {
+            Bitmap mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            mCanvas = new Canvas(mBitmap);
+        }
     }
 
     public void changeColor(int color) {

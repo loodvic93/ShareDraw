@@ -102,12 +102,14 @@ public class UserConnectedActivity extends Fragment implements NotifyService, No
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (admin.isJoining()) {
+                if (admin.isJoining() && !connected.contains(admin.getAuthor())) {
                     Toast.makeText(getContext(), getString(R.string.is_connecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
                     arrayAdapter.add(admin.getAuthor());
-                } else {
+                    connected.add(admin.getAuthor());
+                } else if (!admin.isJoining()){
                     Toast.makeText(getContext(), getString(R.string.is_disconnecting, admin.getAuthor()), Toast.LENGTH_SHORT).show();
                     arrayAdapter.remove(admin.getAuthor());
+                    connected.remove(admin.getAuthor());
                 }
                 arrayAdapter.notifyDataSetChanged();
             }
