@@ -88,7 +88,6 @@ public class SelectionBoard extends AppCompatActivity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             HttpBinder binder = (HttpBinder) service;
             httpService = binder.getService();
-            System.out.println(httpService.getListOfDashboard(getString(R.string.server)));
             getListOfDashboard();
         }
 
@@ -317,7 +316,7 @@ public class SelectionBoard extends AppCompatActivity {
         startActivity(intent);
     }
 
-    private class Dashboard implements Parcelable {
+    private static class Dashboard implements Parcelable {
         private final String name;
         private final String color;
 
@@ -332,7 +331,7 @@ public class SelectionBoard extends AppCompatActivity {
         }
 
         @SuppressWarnings("unused")
-        public final Creator<Dashboard> CREATOR = new Creator<Dashboard>() {
+        public static final Creator<Dashboard> CREATOR = new Creator<Dashboard>() {
             @Override
             public Dashboard createFromParcel(Parcel in) {
                 return new Dashboard(in);

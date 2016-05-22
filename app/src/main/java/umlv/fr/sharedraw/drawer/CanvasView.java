@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.PointF;
 import android.os.Environment;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -36,15 +37,23 @@ import umlv.fr.sharedraw.notifier.NotifyDraw;
  * @version 1.0
  */
 public class CanvasView extends View {
-    private List<Brush> brushes = new ArrayList<>();
     private Brush.BrushType brush = Brush.BrushType.FREE;
+    private List<Brush> brushes = new ArrayList<>();
+    private PointF start = new PointF();
     private NotifyDraw delegate = null;
+    private PointF mid = new PointF();
+    private static final int NONE = 0;
+    private static final int DRAW = 1;
+    private static final int DRAG = 2;
     private final Context mContext;
     private boolean stroke = true;
-    private Paint mPaint;
     private final Path mPath;
+    private int mode = NONE;
     private Brush brushUsed;
     private Canvas mCanvas;
+    private Paint mPaint;
+    private float dx;
+    private float dy;
 
     public CanvasView(Context context) {
         super(context);
@@ -192,40 +201,77 @@ public class CanvasView extends View {
         }
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
+    private void drawBrushes(Canvas canvas) {
         if (!brushes.isEmpty()) {
             for (Brush b : brushes) {
                 if (b != null) {
                     b.draw(canvas);
                 }
             }
-        } else {
-            canvas.drawColor(Color.WHITE);
         }
+    }
+
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+    private void midPoint(PointF point, MotionEvent event) {
+        float x = event.getX(0) + event.getX(1);
+        float y = event.getY(0) + event.getY(1);
+        point.set(x / 2, y / 2);
+    }
+
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        canvas.save();
+        canvas.translate(dx, dy);
+        drawBrushes(canvas);
+        canvas.restore();
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX();
-        float y = event.getY();
+        float x = event.getX() - dx;
+        float y = event.getY() - dy;
 
-        switch (event.getAction()) {
+        switch (event.getAction() & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
+                start.set(x, y);
+                mode = DRAW;
                 startTouch(x, y);
                 invalidate();
                 break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                float oldDist = spacing(event);
+                if (oldDist > 10f) {
+                    midPoint(mid, event);
+                    mode = DRAG;
+                }
+                break;
             case MotionEvent.ACTION_MOVE:
-                moveTouch(x, y);
+                if (mode == DRAW) {
+                    moveTouch(x, y);
+                } else if (mode == DRAG) {
+                    dx = event.getX() - start.x;
+                    dy = event.getY() - start.y;
+                }
                 invalidate();
                 break;
             case MotionEvent.ACTION_UP:
-                upTouch();
+            case MotionEvent.ACTION_POINTER_UP:
+                if (mode == DRAW)
+                    upTouch();
+                mode = NONE;
                 invalidate();
                 break;
         }
         return true;
     }
+
+
 
 
     @Override

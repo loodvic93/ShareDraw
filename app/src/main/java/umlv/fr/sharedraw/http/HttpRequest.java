@@ -3,6 +3,8 @@ package umlv.fr.sharedraw.http;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -94,7 +96,6 @@ public class HttpRequest {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
             Log.e(CLASS_NAME, "Cannot connect to " + params[1]);
             return null;
         }
@@ -111,11 +112,17 @@ public class HttpRequest {
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Length", Integer.toString(params[3].getBytes().length));
             connection.setRequestProperty("Accept-Charset", "UTF-8");
             connection.setDoInput(true);
-            OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
-            connection.getOutputStream().write(params[3].getBytes("UTF-8"));
-            wr.flush();
+
+            DataOutputStream wr = new DataOutputStream(connection.getOutputStream());
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(wr, "UTF-8"));
+            writer.write(params[3]);
+            writer.flush();
+            writer.close();
+            wr.close();
+
             int code = connection.getResponseCode();
             if (code == 200) {
                 return getStringFromInputStream(connection.getInputStream());
@@ -137,9 +144,10 @@ public class HttpRequest {
         if (url == null) return null;
         try {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("Accept-Encoding", "identity");
             int code = connection.getResponseCode();
             if (code == 200) {
-                StringBuilder stringBuilder = new StringBuilder(getStringFromInputStream(connection.getInputStream()));
+                StringBuilder stringBuilder = new StringBuilder(getStringFromInputStream((InputStream) connection.getContent()));
                 stringBuilder.insert(1, "\"id\": " + Integer.valueOf(params[3]) + ", ");
                 return stringBuilder.toString();
             }

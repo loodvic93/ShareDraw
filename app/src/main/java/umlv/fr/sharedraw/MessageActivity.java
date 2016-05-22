@@ -15,6 +15,8 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -135,6 +137,7 @@ public class MessageActivity extends Fragment implements NotifyService, NotifyMe
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                messages.add(say);
                 arrayAdapter.add(say);
                 arrayAdapter.notifyDataSetChanged();
                 ListView lv = (ListView) getActivity().findViewById(R.id.listView_Message);

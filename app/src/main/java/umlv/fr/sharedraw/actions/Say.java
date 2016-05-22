@@ -11,7 +11,6 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 
 public class Say implements Action {
     private static final String CLASS_NAME = Say.class.getCanonicalName();

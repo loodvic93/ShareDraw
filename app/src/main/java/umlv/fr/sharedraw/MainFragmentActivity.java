@@ -96,7 +96,9 @@ public class MainFragmentActivity extends AppCompatActivity {
         outState.putInt("nextId", HTTP_SERVICE.getNextID());
         getSupportFragmentManager().putFragment(outState, "dashboardActivity", dashboardActivity);
         getSupportFragmentManager().putFragment(outState, "userConnectedActivity", userConnectedActivity);
-        //getSupportFragmentManager().putFragment(outState, "messageActivity", messageActivity);
+        if (messageActivity != null) {
+            getSupportFragmentManager().putFragment(outState, "messageActivity", messageActivity);
+        }
     }
 
     @Override
@@ -175,7 +177,7 @@ public class MainFragmentActivity extends AppCompatActivity {
             mNextId = savedInstanceState.getInt("nextId");
             userConnectedActivity = (UserConnectedActivity) getSupportFragmentManager().getFragment(savedInstanceState, "userConnectedActivity");
             dashboardActivity = (DashboardActivity) getSupportFragmentManager().getFragment(savedInstanceState, "dashboardActivity");
-            //messageActivity = (MessageActivity) getSupportFragmentManager().getFragment(savedInstanceState, "messageActivity");
+            messageActivity = (MessageActivity) getSupportFragmentManager().getFragment(savedInstanceState, "messageActivity");
         } else {
             Intent intent = getIntent();
             mUsername = intent.getStringExtra("username");
