@@ -1,10 +1,13 @@
 <resources>
     <string name="app_name">ShareDraw</string>
-    <string name="title_activity_main_fragment">ShareDraw</string>
     <string name="select_dashboard">Select a dashboard</string>
     <string name="add_new_board">Add a new board</string>
     <string name="server">109.26.15.199:7777</string>
     <string name="clear_canvas">Clear Canvas</string>
+    <string name="selection_board_new_title">Please specify information</string>
+    <string name="selection_board_new_dashboard_validate">Ok</string>
+    <string name="selection_board_new_dashboard_cancel">Cancel</string>
+    <string name="title_activity_main_fragment">MainFragment</string>
     <string name="title">Title</string>
     <string name="username">Username</string>
     <string name="title_activity_main">MainActivity</string>
